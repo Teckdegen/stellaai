@@ -32,7 +32,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       {
         id: "welcome",
         role: "assistant",
-        content: `Hello! I'm Stella, your AI assistant for Clarity smart contracts. I can help you build contracts for the Stacks blockchain.\n\nTell me what you'd like to create, and I'll generate the code for you.\n\nExamples:\n- "Create an NFT contract with minting"\n- "Add staking functionality"\n- "Create a marketplace with royalties"`,
+        content: `Hello! I'm Stella, your expert Clarity smart contract assistant for the Stacks blockchain. I can help you build secure, efficient, and standards-compliant contracts.\n\nTell me what you'd like to create, and I'll generate production-ready code for you.\n\nExamples:\n- "Create a SIP-009 compliant NFT contract with minting"\n- "Add staking functionality with time-based rewards"\n- "Create a marketplace with royalties and escrow"\n- "Implement a DAO with proposal voting"\n\nI'll validate your code for syntax, security, and best practices as we work together!`,
       },
     ],
   })
@@ -119,7 +119,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       <div className="p-4 border-t border-border">
         <form onSubmit={onSubmit} className="flex gap-2">
           <Textarea
-            placeholder="Describe what you want to build..."
+            placeholder="Describe what you want to build... (e.g., 'Create an NFT contract with minting and SIP-009 compliance')"
             value={input}
             onChange={handleInputChange}
             onKeyDown={(e) => {

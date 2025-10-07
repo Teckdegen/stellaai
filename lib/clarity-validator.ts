@@ -1,4 +1,4 @@
-// Enhanced Clarity syntax validator with more comprehensive error checking
+// Enhanced Clarity syntax validator with comprehensive error checking
 export interface ValidationResult {
   isValid: boolean
   errors: Array<{ line: number; message: string }>
@@ -56,7 +56,7 @@ export function validateClarityCode(code: string): ValidationResult {
 
     // Check for proper function definitions
     if (trimmed.startsWith("(define-public") || trimmed.startsWith("(define-read-only") || trimmed.startsWith("(define-private")) {
-      if (!trimmed.includes("ok") && !trimmed.includes("err") && !trimmed.includes("begin")) {
+      if (!trimmed.includes("(ok ") && !trimmed.includes("(err ") && !trimmed.includes("begin")) {
         warnings.push({
           line: index + 1,
           message: "Public functions should return (ok ...) or (err ...) response types"
@@ -93,14 +93,64 @@ export function validateClarityCode(code: string): ValidationResult {
         message: "tx-sender should typically be used with is-eq for authorization checks"
       })
     }
+
+    // Check for asserts! usage
+    if (trimmed.includes("asserts!") && !trimmed.includes("(err ")) {
+      warnings.push({
+        line: index + 1,
+        message: "asserts! should be followed by an (err ...) expression"
+      })
+    }
+
+    // Check for proper error constant naming
+    if (trimmed.includes("(err ") && !trimmed.includes("ERR-")) {
+      warnings.push({
+        line: index + 1,
+        message: "Error codes should use ERR- prefix for consistency (e.g., ERR-NOT-AUTHORIZED)"
+      })
+    }
+
+    // Check for begin usage without multiple expressions
+    if (trimmed.includes("(begin") && (trimmed.match(/\(/g) || []).length < 3) {
+      warnings.push({
+        line: index + 1,
+        message: "begin should be used with multiple expressions"
+      })
+    }
   })
 
   // Check for proper contract structure
-  if (code.includes("(define-public") && !code.includes("(ok") && !code.includes("(err")) {
+  if (code.includes("(define-public") && !code.includes("(ok ") && !code.includes("(err ")) {
     warnings.push({
       line: 1,
       message: "Public functions found but no (ok ...) or (err ...) responses detected"
     })
+  }
+
+  // Check for missing standard functions in NFT contracts
+  if (code.includes("define-non-fungible-token")) {
+    if (!code.includes("get-owner")) {
+      warnings.push({
+        line: 1,
+        message: "NFT contract should implement get-owner function for SIP-009 compliance"
+      })
+    }
+    if (!code.includes("transfer")) {
+      warnings.push({
+        line: 1,
+        message: "NFT contract should implement transfer function for SIP-009 compliance"
+      })
+    }
+  }
+
+  // Check for missing standard functions in FT contracts
+  if (code.includes("define-fungible-token")) {
+    if (!code.includes("transfer") || !code.includes("get-balance")) {
+      warnings.push({
+        line: 1,
+        message: "FT contract should implement transfer and get-balance functions for SIP-010 compliance"
+      })
+    }
   }
 
   return {
@@ -137,6 +187,22 @@ export function getSuggestedFix(error: { line: number; message: string }, code: 
   
   if (error.message.includes("define-map requires")) {
     return "Format should be: (define-map name key-type value-type)"
+  }
+  
+  if (error.message.includes("should return")) {
+    return "Wrap function body with (ok ...) for success or (err ...) for errors"
+  }
+  
+  if (error.message.includes("tx-sender should typically")) {
+    return "Add authorization check: (asserts! (is-eq tx-sender owner) (err u1))"
+  }
+  
+  if (error.message.includes("asserts! should be followed")) {
+    return "Add error expression: (asserts! condition (err ERROR_CODE))"
+  }
+  
+  if (error.message.includes("Error codes should use")) {
+    return "Define error constants: (define-constant ERR-NOT-AUTHORIZED u1)"
   }
   
   return null
