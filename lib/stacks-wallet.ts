@@ -1,5 +1,5 @@
 import { AppConfig, UserSession, showConnect, openContractDeploy } from "@stacks/connect"
-import { StacksTestnet, StacksMainnet } from "@stacks/network"
+import { STACKS_TESTNET, STACKS_MAINNET } from "@stacks/network"
 
 const appConfig = new AppConfig(["store_write", "publish_data"])
 export const userSession = new UserSession({ appConfig })
@@ -12,35 +12,44 @@ export interface WalletData {
 export function connectWallet(onFinish: (data: WalletData) => void, onCancel: () => void) {
   console.log("[v0] Initiating wallet connection...")
 
-  showConnect({
-    appDetails: {
-      name: "Stella AI - Clarity Smart Contract Editor",
-      icon: typeof window !== "undefined" ? window.location.origin + "/stella-icon.png" : "",
-    },
-    onFinish: (payload: any) => {
-      console.log("[v0] Wallet connected successfully", payload)
-      try {
-        const userData = userSession.loadUserData()
-        const address = userData?.profile?.stxAddress?.testnet || userData?.profile?.stxAddress?.mainnet || ""
-        onFinish({
-          address,
-          network: "testnet",
-        })
-        if (typeof window !== "undefined") {
-          localStorage.setItem("walletConnected", "true")
-          localStorage.setItem("walletAddress", address)
+  try {
+    showConnect({
+      appDetails: {
+        name: "Stella AI - Clarity Smart Contract Editor",
+        icon: typeof window !== "undefined" ? window.location.origin + "/stella-icon.png" : "",
+      },
+      onFinish: (payload: any) => {
+        console.log("[v0] Wallet connected successfully", payload)
+        try {
+          const userData = userSession.loadUserData()
+          // Determine the appropriate network based on the user data
+          const testnetAddress = userData?.profile?.stxAddress?.testnet
+          const mainnetAddress = userData?.profile?.stxAddress?.mainnet
+          const address = testnetAddress || mainnetAddress || ""
+          // Default to testnet, but this should be determined by the project context
+          onFinish({
+            address,
+            network: "testnet", // This will be updated by the project page
+          })
+          if (typeof window !== "undefined") {
+            localStorage.setItem("walletConnected", "true")
+            localStorage.setItem("walletAddress", address)
+          }
+        } catch (error) {
+          console.error("[v0] Error processing wallet connection:", error)
+          onCancel()
         }
-      } catch (error) {
-        console.error("[v0] Error processing wallet connection:", error)
+      },
+      onCancel: () => {
+        console.log("[v0] Wallet connection cancelled")
         onCancel()
-      }
-    },
-    onCancel: () => {
-      console.log("[v0] Wallet connection cancelled")
-      onCancel()
-    },
-    userSession,
-  })
+      },
+      userSession,
+    })
+  } catch (error) {
+    console.error("[v0] Error initiating wallet connection:", error)
+    onCancel()
+  }
 }
 
 export function disconnectWallet() {
@@ -59,7 +68,8 @@ export function disconnectWallet() {
 
 export function isWalletConnected(): boolean {
   try {
-    const sessionConnected = userSession?.isUserSignedIn ? userSession.isUserSignedIn() : false
+    // Check if userSession exists and has the isUserSignedIn method
+    const sessionConnected = userSession && typeof userSession.isUserSignedIn === 'function' ? userSession.isUserSignedIn() : false
     const localStorageConnected = typeof window !== "undefined" && localStorage.getItem("walletConnected") === "true"
     return sessionConnected || localStorageConnected
   } catch (error) {
@@ -73,7 +83,11 @@ export function getWalletAddress(): string | null {
 
   try {
     const userData = userSession.loadUserData()
-    return userData?.profile?.stxAddress?.testnet || userData?.profile?.stxAddress?.mainnet || null
+    // Check if userData and profile exist
+    if (!userData || !userData.profile) {
+      throw new Error("User data not available")
+    }
+    return userData.profile.stxAddress?.testnet || userData.profile.stxAddress?.mainnet || null
   } catch (error) {
     console.error("[v0] Error getting wallet address:", error)
     if (typeof window !== "undefined") {
@@ -98,6 +112,12 @@ export async function deployContract(
     }
 
     const userData = userSession.loadUserData()
+    
+    // Check if userData and profile exist
+    if (!userData || !userData.profile || !userData.profile.stxAddress) {
+      throw new Error("User data not available")
+    }
+    
     const senderAddress =
       network === "testnet" ? userData.profile.stxAddress.testnet : userData.profile.stxAddress.mainnet
 
@@ -105,12 +125,8 @@ export async function deployContract(
 
     const stacksNetwork =
       network === "testnet"
-        ? new StacksTestnet({
-            url: "https://api.testnet.hiro.so",
-          })
-        : new StacksMainnet({
-            url: "https://api.mainnet.hiro.so",
-          })
+        ? STACKS_TESTNET
+        : STACKS_MAINNET
 
     // Ensure contractName is valid
     const cleanContractName = contractName?.replace(/[^a-zA-Z0-9-]/g, "-")?.toLowerCase() || "contract"

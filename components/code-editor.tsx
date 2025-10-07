@@ -4,6 +4,7 @@ import type React from "react"
 import { Button } from "@/components/ui/button"
 import { FileCode, Copy, Download, Check } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface CodeEditorProps {
   code: string
@@ -70,7 +71,7 @@ export function CodeEditor({ code, onChange }: CodeEditorProps) {
       </div>
 
       {/* Code Editor */}
-      <div className="flex-1 overflow-hidden relative">
+      <ScrollArea className="flex-1 overflow-hidden">
         {localCode ? (
           <div className="flex h-full">
             {/* Line Numbers */}
@@ -104,7 +105,7 @@ export function CodeEditor({ code, onChange }: CodeEditorProps) {
             </div>
           </div>
         )}
-      </div>
+      </ScrollArea>
     </div>
   )
 }

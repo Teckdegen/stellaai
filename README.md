@@ -92,8 +92,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 ├── lib/                   # Utility functions
 │   ├── clarity-validator.ts # Clarity code validation
 │   ├── project-storage.ts   # Project storage management
-│   ├── stacks-wallet.ts     # Stacks wallet integration
-│   └── groq-client.ts       # Groq API client
+│   └── stacks-wallet.ts     # Stacks wallet integration
 └── public/                # Static assets
 ```
 
