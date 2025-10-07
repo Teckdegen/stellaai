@@ -10,6 +10,10 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'standalone',
+  // Ensure proper standalone build configuration
+  experimental: {
+    outputFileTracing: true,
+  },
 }
 
 export default nextConfig
