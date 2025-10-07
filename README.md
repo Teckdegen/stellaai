@@ -2,6 +2,17 @@
 
 Stella AI is the world's most advanced AI-powered development environment for creating Clarity smart contracts on the Stacks blockchain. Describe your contract requirements in natural language and let Stella generate production-ready, secure, and optimized Clarity code.
 
+## 🔧 API KEY SETUP
+
+This project requires a Groq API key to function. You need to add your API key directly to the source code:
+
+1. Get your free Groq API key at https://console.groq.com
+2. Add it to these files:
+   - `app/api/chat/route.ts`
+   - `lib/groq-client.ts`
+
+Look for the line `const GROQ_API_KEY = "your-groq-api-key-here";` and replace it with your actual key.
+
 ## How It Works
 
 Stella AI follows a simple but powerful workflow:
@@ -40,21 +51,12 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
    npm install
    ```
 
-3. **Set up environment variables:**
-   ```bash
-   cp .env.example .env
-   ```
-   Then edit the `.env` file and add your Groq API key:
-   ```
-   GROQ_API_KEY=your_actual_groq_api_key_here
-   ```
-
-4. **Run the development server:**
+3. **Run the development server:**
    ```bash
    npm run dev
    ```
 
-5. **Open your browser:**
+4. **Open your browser:**
    Navigate to `http://localhost:3000` to start using Stella AI.
 
 ## Usage
@@ -95,9 +97,9 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 └── public/                # Static assets
 ```
 
-## Environment Variables
+## API Key Setup
 
-- `GROQ_API_KEY`: Your Groq API key for AI model access
+This project no longer uses environment variables for the Groq API key. Instead, you need to add your API key directly to the source code as described in the API Key Setup section above.
 
 ## Deployment
 
@@ -105,7 +107,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 This project is configured for easy deployment to Vercel:
 
 1. Connect your GitHub repository to Vercel
-2. Set the `GROQ_API_KEY` environment variable in Vercel
+2. Add your Groq API key directly to the source code before deploying
 3. Deploy!
 
 See [Vercel Deployment Guide](docs/vercel-deployment.md) for detailed instructions.
@@ -134,7 +136,6 @@ npm start
 - Refresh the page if connection issues persist
 
 ### AI Generation Issues
-- Check that your GROQ_API_KEY is correctly set
 - Ensure you have internet connectivity
 - Try rephrasing your request if the AI doesn't understand
 
@@ -148,6 +149,13 @@ npm start
 - Verify your wallet has sufficient STX for transaction fees
 - Check that your contract name is unique
 - Ensure your code passes validation before deployment
+
+## Security
+
+Since you're adding the API key directly to the source code, make sure to:
+1. Never commit your actual API key to version control
+2. Add the files containing your API key to `.gitignore` if you're pushing to a public repository
+3. Use a separate branch or fork for development that isn't publicly accessible
 
 ## Contributing
 

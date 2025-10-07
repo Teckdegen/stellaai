@@ -9,11 +9,14 @@ node_modules
 out
 
 # Environment files
-.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# API Key files - Uncomment the lines below if you've added your actual API key to the source code
+# app/api/chat/route.ts
+# lib/groq-client.ts
 
 # Logs
 npm-debug.log*

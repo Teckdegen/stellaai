@@ -1,9 +1,12 @@
 // Groq API Client for testing
 import Groq from "groq-sdk"
 
+// TODO: Add your Groq API key here
+const GROQ_API_KEY = "your-groq-api-key-here";
+
 // Initialize Groq client
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || "",
+  apiKey: GROQ_API_KEY,
 })
 
 /**

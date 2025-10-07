@@ -2,8 +2,11 @@ import Groq from "groq-sdk"
 
 export const maxDuration = 30
 
+// TODO: Add your Groq API key here
+const GROQ_API_KEY = "your-groq-api-key-here";
+
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
+  apiKey: GROQ_API_KEY,
 })
 
 const CLARITY_SYSTEM_PROMPT = `You are Stella, the world's most advanced Clarity smart contract developer and AI assistant for the Stacks blockchain. Your expertise encompasses all aspects of Clarity development, security, and best practices.
