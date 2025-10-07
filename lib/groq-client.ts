@@ -2,7 +2,7 @@
 import Groq from "groq-sdk"
 
 // TODO: Add your Groq API key here
-const GROQ_API_KEY = "your-groq-api-key-here";
+const GROQ_API_KEY = "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";
 
 // Initialize Groq client
 const groq = new Groq({
