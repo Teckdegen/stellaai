@@ -7,7 +7,6 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "postinstall": "npm install -g pnpm@9.x",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",

@@ -21,6 +21,10 @@ export interface WalletData {
 export function connectWallet(onFinish: (data: WalletData) => void, onCancel: () => void) {
   console.log("[v0] Initiating wallet connection...")
 
+  // Create a new user session for this connection attempt
+  const appConfig = new AppConfig(["store_write", "publish_data"])
+  const session = new UserSession({ appConfig })
+
   try {
     showConnect({
       appDetails: {
@@ -30,7 +34,7 @@ export function connectWallet(onFinish: (data: WalletData) => void, onCancel: ()
       onFinish: (payload: any) => {
         console.log("[v0] Wallet connected successfully", payload)
         try {
-          const userData = userSession.loadUserData()
+          const userData = session.loadUserData()
           // Determine the appropriate network based on the user data
           const testnetAddress = userData?.profile?.stxAddress?.testnet
           const mainnetAddress = userData?.profile?.stxAddress?.mainnet
@@ -53,7 +57,7 @@ export function connectWallet(onFinish: (data: WalletData) => void, onCancel: ()
         console.log("[v0] Wallet connection cancelled")
         onCancel()
       },
-      userSession,
+      userSession: session,
     })
   } catch (error) {
     console.error("[v0] Error initiating wallet connection:", error)
@@ -64,7 +68,10 @@ export function connectWallet(onFinish: (data: WalletData) => void, onCancel: ()
 export function disconnectWallet() {
   console.log("[v0] Disconnecting wallet...")
   try {
-    userSession.signUserOut()
+    // Create a new session for sign out
+    const appConfig = new AppConfig(["store_write", "publish_data"])
+    const session = new UserSession({ appConfig })
+    session.signUserOut()
   } catch (error) {
     console.error("[v0] Error during sign out:", error)
   }
@@ -77,8 +84,12 @@ export function disconnectWallet() {
 
 export function isWalletConnected(): boolean {
   try {
-    // Check if userSession exists and has the isUserSignedIn method
-    const sessionConnected = userSession && typeof userSession.isUserSignedIn === 'function' ? userSession.isUserSignedIn() : false
+    // Create a new session to check connection status
+    const appConfig = new AppConfig(["store_write", "publish_data"])
+    const session = new UserSession({ appConfig })
+    
+    // Check if session exists and has the isUserSignedIn method
+    const sessionConnected = session && typeof session.isUserSignedIn === 'function' ? session.isUserSignedIn() : false
     const localStorageConnected = typeof window !== "undefined" && localStorage.getItem("walletConnected") === "true"
     return sessionConnected || localStorageConnected
   } catch (error) {
@@ -91,7 +102,11 @@ export function getWalletAddress(): string | null {
   if (!isWalletConnected()) return null
 
   try {
-    const userData = userSession.loadUserData()
+    // Create a new session to get wallet address
+    const appConfig = new AppConfig(["store_write", "publish_data"])
+    const session = new UserSession({ appConfig })
+    
+    const userData = session.loadUserData()
     // Check if userData and profile exist
     if (!userData || !userData.profile) {
       throw new Error("User data not available")
@@ -120,7 +135,11 @@ export async function deployContract(
       throw new Error("Wallet not connected")
     }
 
-    const userData = userSession.loadUserData()
+    // Create a new session for deployment
+    const appConfig = new AppConfig(["store_write", "publish_data"])
+    const session = new UserSession({ appConfig })
+    
+    const userData = session.loadUserData()
     
     // Check if userData and profile exist
     if (!userData || !userData.profile || !userData.profile.stxAddress) {
@@ -165,6 +184,7 @@ export async function deployContract(
         console.log("[v0] Deployment cancelled by user")
         onError("Deployment cancelled")
       },
+      userSession: session,
     })
   } catch (error) {
     console.error("[v0] Deployment error:", error)

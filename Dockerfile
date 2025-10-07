@@ -1,14 +1,17 @@
 # Use Node.js 18 alpine image
 FROM node:18-alpine
 
+# Install pnpm
+RUN npm install -g pnpm@9.x
+
+# Set pnpm to use the global installation
+ENV PNPM_HOME=/usr/local/bin
+
 # Set working directory
 WORKDIR /app
 
 # Copy package.json and pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml* ./
-
-# Install pnpm globally
-RUN npm install -g pnpm
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
