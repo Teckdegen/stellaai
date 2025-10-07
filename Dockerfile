@@ -1,8 +1,8 @@
 # Use Node.js 18 alpine image
 FROM node:18-alpine
 
-# Install pnpm
-RUN npm install -g pnpm@9.x
+# Install pnpm and next globally
+RUN npm install -g pnpm@9.x next@15.2.4
 
 # Set pnpm to use the global installation
 ENV PNPM_HOME=/usr/local/bin
