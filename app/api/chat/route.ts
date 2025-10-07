@@ -3,7 +3,7 @@ import Groq from "groq-sdk"
 export const maxDuration = 30
 
 // TODO: Add your Groq API key here
-const GROQ_API_KEY = "your-groq-api-key-here";
+const GROQ_API_KEY = "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";
 
 const groq = new Groq({
   apiKey: GROQ_API_KEY,
