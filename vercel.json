@@ -1,6 +1,5 @@
 {
   "buildCommand": "pnpm build",
   "framework": "nextjs",
-  "regions": ["iad1"],
-  "packageManager": "pnpm@9.x"
+  "regions": ["iad1"]
 }

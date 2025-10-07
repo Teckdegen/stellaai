@@ -3,8 +3,17 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Wallet, LogOut } from "lucide-react"
-import { connectWallet, disconnectWallet, isWalletConnected, getWalletAddress } from "@/lib/stacks-wallet"
+import { connectWallet, disconnectWallet, isWalletConnected, getWalletAddress, userSession } from "@/lib/stacks-wallet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+
+// Initialize the user session
+if (typeof window !== 'undefined') {
+  try {
+    userSession.loadUserData()
+  } catch (error) {
+    console.log("[v0] User session not initialized yet")
+  }
+}
 
 export function WalletButton() {
   const [connected, setConnected] = useState(false)
