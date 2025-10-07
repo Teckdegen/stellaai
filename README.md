@@ -101,7 +101,21 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 
 ## Deployment
 
-This project can be deployed to Vercel with the environment variables configured in the Vercel dashboard.
+### Vercel Deployment
+This project is configured for easy deployment to Vercel:
+
+1. Connect your GitHub repository to Vercel
+2. Set the `GROQ_API_KEY` environment variable in Vercel
+3. Deploy!
+
+See [Vercel Deployment Guide](docs/vercel-deployment.md) for detailed instructions.
+
+### Manual Deployment
+You can also deploy manually:
+```bash
+npm run build
+npm start
+```
 
 ## Technologies Used
 
