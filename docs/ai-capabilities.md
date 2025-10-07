@@ -166,4 +166,26 @@ This document outlines the comprehensive capabilities of Stella AI for Clarity s
 - Accuracy enhancement
 - Capability expansion
 
-This comprehensive capability set ensures that Stella AI can generate, validate, and improve Clarity smart contracts to the highest professional standards.
+## Real Groq API Integration
+
+Stella AI now uses the official Groq API with the Llama 3.3 70b model for code generation:
+
+### API Features
+- **High Performance**: Fast inference with low latency
+- **Advanced Model**: Llama 3.3 70b for superior code generation
+- **Streaming Responses**: Real-time response delivery
+- **Production Ready**: Enterprise-grade reliability
+
+### Integration Benefits
+- **Direct API Access**: No intermediaries or wrappers
+- **Full Control**: Complete access to model parameters
+- **Customization**: Adjustable temperature and token limits
+- **Monitoring**: Built-in error handling and logging
+
+### Model Capabilities
+- **Clarity Expertise**: Deep understanding of Clarity language
+- **Security Focus**: Trained on secure contract patterns
+- **Standards Knowledge**: Comprehensive SIP compliance
+- **Best Practices**: Industry-standard implementation patterns
+
+This comprehensive capability set ensures that Stella AI can generate, validate, and improve Clarity smart contracts to the highest professional standards using the real Groq API integration.

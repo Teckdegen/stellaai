@@ -2,9 +2,19 @@
 
 Stella AI is the world's most advanced AI-powered development environment for creating Clarity smart contracts on the Stacks blockchain. Describe your contract requirements in natural language and let Stella generate production-ready, secure, and optimized Clarity code.
 
+## How It Works
+
+Stella AI follows a simple but powerful workflow:
+1. **Describe** your contract requirements in plain English
+2. **Generate** complete, standards-compliant Clarity code with AI
+3. **Validate** the code with built-in security and best practice checks
+4. **Deploy** directly to Stacks blockchain with wallet integration
+
+The AI generates a **single Clarity file** (.clar) that contains your entire contract - no external dependencies, no complex setups. This single file is what gets deployed to the Stacks blockchain.
+
 ## Features
 
-- 🤖 **AI-Powered Generation**: Describe your contract in plain English and let Stella generate Clarity code
+- 🤖 **AI-Powered Generation**: Describe your contract in plain English and let Stella generate Clarity code using the real Groq API
 - ✅ **Built-in Validation**: Automatic syntax checking and error detection before deployment
 - 🛠️ **AI-Assisted Fixes**: Get suggestions for fixing common Clarity code issues
 - ⚡ **One-Click Deploy**: Deploy directly to Stacks blockchain with wallet integration
@@ -74,13 +84,14 @@ Stella AI is the world's most advanced AI-powered development environment for cr
 
 ```
 ├── app/                    # Next.js app router pages
-│   ├── api/chat/          # AI chat API endpoint
+│   ├── api/chat/          # AI chat API endpoint (real Groq API integration)
 │   └── project/[id]/      # Project page
 ├── components/            # React components
 ├── lib/                   # Utility functions
 │   ├── clarity-validator.ts # Clarity code validation
 │   ├── project-storage.ts   # Project storage management
-│   └── stacks-wallet.ts     # Stacks wallet integration
+│   ├── stacks-wallet.ts     # Stacks wallet integration
+│   └── groq-client.ts       # Groq API client
 └── public/                # Static assets
 ```
 
@@ -98,7 +109,7 @@ This project can be deployed to Vercel with the environment variables configured
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [shadcn/ui](https://ui.shadcn.com/) - UI components
-- [Groq](https://groq.com/) - AI inference (Llama 3.3 70b model)
+- [Groq API](https://groq.com/) - AI inference (Llama 3.3 70b model)
 - [Stacks.js](https://stacks.js.org/) - Stacks blockchain integration
 
 ## Troubleshooting

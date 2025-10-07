@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Send, Sparkles, Loader2 } from "lucide-react"
-import { useChat } from "@ai-sdk/react"
+
+interface Message {
+  id: string
+  role: "user" | "assistant"
+  content: string
+}
 
 interface ChatPanelProps {
   projectId: string
@@ -19,29 +24,22 @@ interface ChatPanelProps {
 
 export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, network }: ChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [lastProcessedMessage, setLastProcessedMessage] = useState<string>("")
-
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setInput } = useChat({
-    api: "/api/chat",
-    body: {
-      contractName,
-      network,
-      currentCode,
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content: `Hello! I'm Stella, your expert Clarity smart contract assistant for the Stacks blockchain. I can help you build secure, efficient, and standards-compliant contracts.\n\nTell me what you'd like to create, and I'll generate production-ready code for you.\n\nExamples:\n- "Create a SIP-009 compliant NFT contract with minting"\n- "Add staking functionality with time-based rewards"\n- "Create a marketplace with royalties and escrow"\n- "Implement a DAO with proposal voting"\n\nI'll validate your code for syntax, security, and best practices as we work together!`,
     },
-    initialMessages: [
-      {
-        id: "welcome",
-        role: "assistant",
-        content: `Hello! I'm Stella, your expert Clarity smart contract assistant for the Stacks blockchain. I can help you build secure, efficient, and standards-compliant contracts.\n\nTell me what you'd like to create, and I'll generate production-ready code for you.\n\nExamples:\n- "Create a SIP-009 compliant NFT contract with minting"\n- "Add staking functionality with time-based rewards"\n- "Create a marketplace with royalties and escrow"\n- "Implement a DAO with proposal voting"\n\nI'll validate your code for syntax, security, and best practices as we work together!`,
-      },
-    ],
-  })
+  ])
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [lastProcessedMessage, setLastProcessedMessage] = useState<string>("")
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages])
+  }, [messages, isLoading])
 
   // Extract code from AI responses
   useEffect(() => {
@@ -73,9 +71,93 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
     }
   }, [messages, lastProcessedMessage, onCodeUpdate])
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    handleSubmit(e)
+    if (!input.trim() || isLoading) return
+
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input,
+    }
+
+    setMessages((prev) => [...prev, userMessage])
+    setInput("")
+    setIsLoading(true)
+
+    try {
+      // Add temporary assistant message
+      const assistantMessageId = `assistant-${Date.now()}`
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantMessageId,
+          role: "assistant",
+          content: "",
+        },
+      ])
+
+      // Call the API
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+          contractName,
+          network,
+          currentCode,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      if (!response.body) {
+        throw new Error("Response body is null")
+      }
+
+      // Process the stream
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let done = false
+      let assistantContent = ""
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read()
+        done = readerDone
+
+        if (value) {
+          const chunk = decoder.decode(value, { stream: true })
+          assistantContent += chunk
+
+          // Update the assistant message
+          setMessages((prev) => {
+            const newMessages = [...prev]
+            const lastMessage = newMessages[newMessages.length - 1]
+            if (lastMessage.id === assistantMessageId) {
+              lastMessage.content = assistantContent
+            }
+            return newMessages
+          })
+        }
+      }
+    } catch (error) {
+      console.error("Error:", error)
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `error-${Date.now()}`,
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again.",
+        },
+      ])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -117,15 +199,15 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
 
       {/* Input */}
       <div className="p-4 border-t border-border">
-        <form onSubmit={onSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <Textarea
             placeholder="Describe what you want to build... (e.g., 'Create an NFT contract with minting and SIP-009 compliance')"
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault()
-                onSubmit(e as any)
+                handleSubmit(e as any)
               }
             }}
             className="min-h-[60px] resize-none"

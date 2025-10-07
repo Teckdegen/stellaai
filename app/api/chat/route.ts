@@ -1,6 +1,10 @@
-import { streamText } from "ai"
+import Groq from "groq-sdk"
 
 export const maxDuration = 30
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+})
 
 const CLARITY_SYSTEM_PROMPT = `You are Stella, the world's most advanced Clarity smart contract developer and AI assistant for the Stacks blockchain. Your expertise encompasses all aspects of Clarity development, security, and best practices.
 
@@ -116,20 +120,50 @@ export async function POST(req: Request) {
 
 User's request:`
 
-    const result = streamText({
-      model: "groq/llama-3.3-70b-versatile",
-      system: CLARITY_SYSTEM_PROMPT,
+    const userMessage = messages[messages.length - 1].content
+    const chatHistory = messages.slice(0, -1)
+
+    const completion = await groq.chat.completions.create({
       messages: [
-        ...messages.slice(0, -1),
+        {
+          role: "system",
+          content: CLARITY_SYSTEM_PROMPT,
+        },
+        ...chatHistory,
         {
           role: "user",
-          content: contextMessage + "\n" + messages[messages.length - 1].content,
+          content: contextMessage + "\n" + userMessage,
         },
       ],
+      model: "llama-3.3-70b-versatile",
       temperature: 0.7,
+      max_tokens: 3000,
+      stream: true,
     })
 
-    return result.toTextStreamResponse()
+    // Create a readable stream from the response
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of completion) {
+            const content = chunk.choices[0]?.delta?.content || ""
+            if (content) {
+              const text = new TextEncoder().encode(content)
+              controller.enqueue(text)
+            }
+          }
+          controller.close()
+        } catch (error) {
+          controller.error(error)
+        }
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    })
   } catch (error) {
     console.error("[v0] Chat API Error:", error)
     return Response.json({ error: "Failed to process request" }, { status: 500 })
