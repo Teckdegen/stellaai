@@ -8,11 +8,6 @@ import {
   TxBroadcastResult
 } from "@stacks/transactions"
 
-export interface WalletData {
-  address: string
-  network: "testnet" | "mainnet"
-}
-
 // Remove wallet connect functions and implement private key-based deployment
 export async function deployContractWithPrivateKey(
   contractName: string,
