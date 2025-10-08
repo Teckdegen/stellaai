@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Play, Home, Loader2, ExternalLink, Menu } from "lucide-react"
+import { Play, Home, Loader2, ExternalLink, Menu, Code, Network } from "lucide-react"
 import { ChatPanel } from "@/components/chat-panel"
 import { CodeEditor } from "@/components/code-editor"
 import { ConsolePanel } from "@/components/console-panel"
@@ -259,13 +259,13 @@ export default function ProjectPage() {
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
-      {/* Header */}
-      <header className="border-b border-border px-4 py-3 flex items-center justify-between flex-shrink-0">
+      {/* Professional Header */}
+      <header className="border-b border-border px-4 py-3 flex items-center justify-between flex-shrink-0 bg-card">
         <div className="flex items-center gap-4">
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="rounded-full">
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
@@ -280,24 +280,30 @@ export default function ProjectPage() {
             </SheetContent>
           </Sheet>
 
-          <Button variant="ghost" size="icon" onClick={() => router.push("/")} className="hidden lg:flex">
+          <Button variant="ghost" size="icon" onClick={() => router.push("/")} className="hidden lg:flex rounded-full">
             <Home className="w-4 h-4" />
           </Button>
-          <div className="flex items-center gap-2">
-            <Image src="/stella-icon.png" alt="Stella AI" width={32} height={32} className="rounded" />
+          
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Code className="w-5 h-5 text-primary" />
+            </div>
             <div>
-              <h1 className="font-semibold text-sm">{project.contractName}</h1>
-              <p className="text-xs text-muted-foreground capitalize">{project.network}</p>
+              <h1 className="font-semibold text-base">{project.contractName}</h1>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Network className="w-3 h-3" />
+                <span className="capitalize font-medium">{project.network}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button
             size="sm"
             onClick={handleDeploy}
             disabled={isDeploying || !clarCode.trim()}
-            className="hidden sm:flex"
+            className="hidden sm:flex rounded-full px-4"
           >
             {isDeploying ? (
               <>
@@ -307,11 +313,16 @@ export default function ProjectPage() {
             ) : (
               <>
                 <Play className="w-4 h-4 mr-2" />
-                Deploy
+                Deploy Contract
               </>
             )}
           </Button>
-          <Button size="icon" onClick={handleDeploy} disabled={isDeploying || !clarCode.trim()} className="sm:hidden">
+          <Button 
+            size="icon" 
+            onClick={handleDeploy} 
+            disabled={isDeploying || !clarCode.trim()} 
+            className="sm:hidden rounded-full"
+          >
             {isDeploying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
           </Button>
         </div>
@@ -320,7 +331,7 @@ export default function ProjectPage() {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Chat Panel - Desktop only */}
-        <div className="hidden lg:block w-1/4 border-r border-border">
+        <div className="hidden lg:block w-1/4 border-r border-border bg-card">
           <ChatPanel
             projectId={project.id}
             onCodeUpdate={handleCodeUpdate}
@@ -333,12 +344,12 @@ export default function ProjectPage() {
         {/* Editor and Console */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Code Editor */}
-          <div className="flex-1 border-b border-border overflow-hidden">
+          <div className="flex-1 border-b border-border overflow-hidden bg-card">
             <CodeEditor code={clarCode} onChange={handleCodeChange} />
           </div>
 
           {/* Console Panel */}
-          <div className="h-1/4 overflow-hidden">
+          <div className="h-1/4 overflow-hidden bg-card">
             <ConsolePanel messages={consoleMessages} onClear={handleClearConsole} />
           </div>
         </div>
@@ -346,9 +357,12 @@ export default function ProjectPage() {
 
       {/* Private Key Dialog */}
       <Dialog open={showPrivateKeyDialog} onOpenChange={setShowPrivateKeyDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>🔐 Enter Private Key</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <span>🔐</span>
+              <span>Deploy Contract</span>
+            </DialogTitle>
             <DialogDescription>
               Enter your Stacks private key to deploy the contract. Your private key is never stored or transmitted.
             </DialogDescription>
@@ -366,10 +380,14 @@ export default function ProjectPage() {
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowPrivateKeyDialog(false)}>
+              <Button variant="outline" onClick={() => setShowPrivateKeyDialog(false)} className="rounded-full">
                 Cancel
               </Button>
-              <Button onClick={handleDeployWithPrivateKey} disabled={!privateKey.trim()}>
+              <Button 
+                onClick={handleDeployWithPrivateKey} 
+                disabled={!privateKey.trim()} 
+                className="rounded-full"
+              >
                 Deploy
               </Button>
             </div>
@@ -381,7 +399,10 @@ export default function ProjectPage() {
       <Dialog open={!!deployedTxId} onOpenChange={() => setDeployedTxId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>🎉 Deployment Successful!</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <span>🎉</span>
+              <span>Deployment Successful!</span>
+            </DialogTitle>
             <DialogDescription>Your contract has been deployed to the Stacks {project.network}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -389,7 +410,7 @@ export default function ProjectPage() {
               <p className="text-xs font-mono break-all">{deployedTxId}</p>
             </div>
             {explorerUrl && (
-              <Button className="w-full" onClick={() => window.open(explorerUrl, "_blank")}>
+              <Button className="w-full rounded-full" onClick={() => window.open(explorerUrl, "_blank")}>
                 <ExternalLink className="w-4 h-4 mr-2" />
                 View on Stacks Explorer
               </Button>

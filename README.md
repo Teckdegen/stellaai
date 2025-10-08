@@ -77,7 +77,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
    - You can manually edit the code if needed
 
 4. **Deploy Contract:**
-   - Click the "Deploy" button
+   - Click the "Deploy Contract" button
    - Enter your Stacks private key when prompted
    - Confirm deployment
 
