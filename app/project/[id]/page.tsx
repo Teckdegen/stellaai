@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircle, AlertCircle, Send, Wifi } from "lucide-react"
+import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircle, AlertCircle, Send, Wifi, Info } from "lucide-react"
 import { ChatPanel } from "@/components/chat-panel"
 import { CodeEditor } from "@/components/code-editor"
 import { ConsolePanel } from "@/components/console-panel"
@@ -193,6 +193,7 @@ export default function ProjectPage() {
       ...prev,
       { type: "info", message: "Initiating deployment to Stacks blockchain...", timestamp },
       { type: "info", message: `Network: ${project.network}`, timestamp },
+      { type: "info", message: "Make sure your wallet has sufficient STX for transaction fees", timestamp },
     ])
 
     // Add safety checks for required project properties
@@ -397,6 +398,19 @@ export default function ProjectPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="bg-white/5 p-3 rounded-lg">
+              <div className="flex items-start gap-2">
+                <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-gray-300">
+                  <p className="font-medium mb-1">Deployment Requirements:</p>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>Ensure your wallet has sufficient STX for transaction fees</li>
+                    <li>For testnet, get STX from the <a href="https://explorer.stacks.co/sandbox/faucet?chain=testnet" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">faucet</a></li>
+                    <li>Contract name must be unique for your address</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
             <div>
               <label htmlFor="privateKey" className="text-sm font-medium text-white">Private Key</label>
               <Input

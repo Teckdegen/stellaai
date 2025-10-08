@@ -81,6 +81,8 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
    - Enter your Stacks private key when prompted
    - Confirm deployment
 
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## Project Structure
 
 ```
@@ -117,6 +119,8 @@ npm run build
 npm start
 ```
 
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## Technologies Used
 
 - [Next.js](https://nextjs.org/) - React framework
@@ -142,6 +146,12 @@ npm start
 - Verify your private key is valid and has sufficient STX for transaction fees
 - Check that your contract name is unique
 - Ensure your code passes validation before deployment
+- See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed troubleshooting
+
+Common deployment errors and their solutions:
+- **"NotEnoughFunds"**: Your wallet doesn't have enough STX for transaction fees
+- **"ContractAlreadyExists"**: A contract with that name already exists for your address
+- **"Transaction aborted during execution"**: The transaction failed during execution; check your code and wallet balance
 
 ## Security
 

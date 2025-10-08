@@ -78,7 +78,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       {
         id: "welcome",
         role: "assistant",
-        content: `Hello! I'm Clarity AI, your smart contract assistant.\n\nI can help you build secure Stacks blockchain smart contracts. Just describe what you want to build, and I'll generate the code for you.\n\nExamples:\n- "Create an NFT contract"\n- "Add staking functionality"\n- "Create a token contract"\n\nYou can also ask me to explain any part of the codebase or analyze your existing code.`,
+        content: `Hello! I'm Clarity AI, your smart contract assistant.\n\nI specialize in generating Clarity smart contracts for the Stacks blockchain. Just describe what you want to build, and I'll generate the code for you.\n\nExamples:\n- "Create an NFT contract"\n- "Add staking functionality"\n- "Create a token contract"\n\nI'll focus on writing code rather than lengthy explanations. You can view the generated code in the editor panel.`,
       },
     ]
   })

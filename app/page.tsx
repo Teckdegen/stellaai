@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Code2, Sparkles, Clock, Trash2, FolderOpen, FileText, Plus, Globe, Shield, Zap, Github, Twitter, BookOpen } from "lucide-react"
+import { Code2, Sparkles, Clock, Trash2, FolderOpen, Plus, Globe, Shield } from "lucide-react"
 import { ProjectStorage, type Project } from "@/lib/project-storage"
 import {
   AlertDialog,
@@ -67,7 +67,7 @@ export default function LandingPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <header className="text-center mb-16 pt-8">
+          <header className="text-center mb-12 pt-8">
             <div className="flex items-center justify-center gap-3 mb-6">
               <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-lg">
                 <Sparkles className="w-8 h-8 text-black" />
@@ -76,36 +76,9 @@ export default function LandingPage() {
                 Clarity AI
               </h1>
             </div>
-            <p className="text-gray-300 text-lg max-w-2xl mx-auto mb-8">
-              AI-powered smart contract development for the Stacks blockchain
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+              Professional smart contract development for the Stacks blockchain
             </p>
-            
-            {/* Feature Highlights */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
-              <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center mb-4 mx-auto">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="font-semibold mb-2">AI-Powered</h3>
-                <p className="text-sm text-gray-400">Generate secure smart contracts with natural language</p>
-              </div>
-              
-              <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center mb-4 mx-auto">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="font-semibold mb-2">Secure</h3>
-                <p className="text-sm text-gray-400">Built-in validation and security best practices</p>
-              </div>
-              
-              <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center mb-4 mx-auto">
-                  <Globe className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="font-semibold mb-2">Stacks Blockchain</h3>
-                <p className="text-sm text-gray-400">Deploy directly to Stacks testnet or mainnet</p>
-              </div>
-            </div>
           </header>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -243,24 +216,6 @@ export default function LandingPage() {
               )}
             </div>
           </div>
-
-          {/* Footer */}
-          <footer className="mt-16 pt-8 border-t border-white/10 text-center">
-            <div className="flex justify-center gap-6 mb-6">
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-white/10">
-                <Github className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-white/10">
-                <Twitter className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-white/10">
-                <BookOpen className="w-5 h-5" />
-              </Button>
-            </div>
-            <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} Clarity AI. Built for the Stacks blockchain.
-            </p>
-          </footer>
         </div>
       </div>
 

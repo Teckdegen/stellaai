@@ -51,7 +51,16 @@ export async function deployContractWithPrivateKey(
     
     // Check if result is successful or has error
     if ('error' in result) {
-      throw new Error(`Transaction broadcast failed: ${result.reason} - ${result.error}`)
+      // Handle specific error types with better messages
+      if (result.reason === 'NotEnoughFunds') {
+        throw new Error(`Insufficient STX balance for deployment. Please ensure your wallet has enough STX for transaction fees.`)
+      } else if (result.reason === 'ContractAlreadyExists') {
+        throw new Error(`A contract with the name "${cleanContractName}" already exists for this address. Please use a different contract name.`)
+      } else if (result.reason === 'FeeTooLow') {
+        throw new Error(`Transaction fee is too low. Please try again with a higher fee.`)
+      } else {
+        throw new Error(`Transaction broadcast failed: ${result.reason} - ${result.error}`)
+      }
     }
     
     if (!result.txid) {
