@@ -41,7 +41,7 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
 
   // Auto-scroll to bottom when new messages arrive and autoScroll is enabled
   useEffect(() => {
-    if (autoScroll) {
+    if (autoScroll && messages.length > 0) {
       scrollToBottom()
     }
   }, [messages, autoScroll])
@@ -50,10 +50,10 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
     if (scrollAreaRef.current) {
       const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
       if (viewport) {
-        // Add a small delay to ensure DOM is updated
-        setTimeout(() => {
+        // Use requestAnimationFrame for better performance
+        requestAnimationFrame(() => {
           viewport.scrollTop = viewport.scrollHeight
-        }, 0)
+        })
       }
     }
   }

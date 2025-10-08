@@ -83,10 +83,10 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
     if (scrollAreaRef.current) {
       const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
       if (viewport) {
-        // Add a small delay to ensure DOM is updated
-        setTimeout(() => {
+        // Use requestAnimationFrame for better performance
+        requestAnimationFrame(() => {
           viewport.scrollTop = viewport.scrollHeight
-        }, 0)
+        })
       }
     }
   }
@@ -250,7 +250,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
     } finally {
       setIsLoading(false)
       // Final scroll to bottom
-      setTimeout(scrollToBottom, 100)
+      setTimeout(() => scrollToBottom(), 100)
     }
   }
 

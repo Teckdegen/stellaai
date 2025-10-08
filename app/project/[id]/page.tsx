@@ -22,7 +22,7 @@ export default function ProjectPage() {
   const [project, setProject] = useState<Project | null>(null)
   const [clarCode, setClarCode] = useState("")
   const [consoleMessages, setConsoleMessages] = useState<
-    Array<{ type: "info" | "error" | "success"; message: string; timestamp: string }>
+    Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>
   >([])
   const [isDeploying, setIsDeploying] = useState(false)
   const [deployedTxId, setDeployedTxId] = useState<string | null>(null)
@@ -96,7 +96,7 @@ export default function ProjectPage() {
         setConsoleMessages((prev) => [
           ...prev,
           {
-            type: "info",
+            type: "warning",
             message: `Warning Line ${warning.line}: ${warning.message}`,
             timestamp,
           },
@@ -335,9 +335,9 @@ export default function ProjectPage() {
         <PanelGroup direction="horizontal" className="flex-1 overflow-hidden">
           {/* Chat Panel - Desktop only */}
           <Panel 
-            defaultSize={25} 
-            minSize={20} 
-            maxSize={40}
+            defaultSize={22} 
+            minSize={15} 
+            maxSize={35}
             className="hidden lg:block border-r border-white/10 bg-black"
           >
             <ChatPanel
@@ -352,11 +352,11 @@ export default function ProjectPage() {
           <PanelResizeHandle className="w-2 bg-white/10 hover:bg-white/20 transition-colors cursor-col-resize" />
           
           {/* Editor and Console - Flexible area */}
-          <Panel defaultSize={75} minSize={60} className="flex flex-col overflow-hidden">
+          <Panel defaultSize={78} minSize={65} className="flex flex-col overflow-hidden">
             <PanelGroup direction="vertical" className="flex-1 overflow-hidden">
               {/* Code Editor - Takes most space */}
               <Panel 
-                defaultSize={75} 
+                defaultSize={70} 
                 minSize={50}
                 className="border-b border-white/10 bg-black relative overflow-hidden"
               >
@@ -367,8 +367,8 @@ export default function ProjectPage() {
               
               {/* Console Panel - Fixed height */}
               <Panel 
-                defaultSize={25} 
-                minSize={20}
+                defaultSize={30} 
+                minSize={25}
                 className="bg-black relative overflow-hidden"
               >
                 <ConsolePanel messages={consoleMessages} onClear={handleClearConsole} />
