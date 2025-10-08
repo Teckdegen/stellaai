@@ -123,6 +123,32 @@
   --color-warning: var(--warning);
 }
 
+/* Resizable panel styles */
+div[class*="PanelResizeHandle"] {
+  position: relative;
+  z-index: 10;
+}
+
+div[class*="PanelResizeHandle"]:hover::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: hsl(var(--primary) / 0.2);
+}
+
+div[class*="PanelResizeHandle"][data-panel-group-direction="horizontal"] {
+  width: 6px;
+  cursor: col-resize;
+}
+
+div[class*="PanelResizeHandle"][data-panel-group-direction="vertical"] {
+  height: 6px;
+  cursor: row-resize;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

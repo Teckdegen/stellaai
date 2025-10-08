@@ -13,6 +13,7 @@ import { ProjectStorage, type Project } from "@/lib/project-storage"
 import { deployContractWithPrivateKey } from "@/lib/stacks-wallet"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import Image from "next/image"
 
 export default function ProjectPage() {
@@ -328,31 +329,52 @@ export default function ProjectPage() {
         </div>
       </header>
 
-      {/* Main Content - Fixed layout */}
+      {/* Main Content - Resizable layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Chat Panel - Desktop only, fixed width */}
-        <div className="hidden lg:block w-1/4 border-r border-border bg-card flex-shrink-0">
-          <ChatPanel
-            projectId={project.id}
-            onCodeUpdate={handleCodeUpdate}
-            currentCode={clarCode}
-            contractName={project.contractName}
-            network={project.network}
-          />
-        </div>
-
-        {/* Editor and Console - Flexible area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Code Editor - Takes most space */}
-          <div className="flex-1 border-b border-border overflow-hidden bg-card">
-            <CodeEditor code={clarCode} onChange={handleCodeChange} />
-          </div>
-
-          {/* Console Panel - Fixed height */}
-          <div className="h-1/4 overflow-hidden bg-card flex-shrink-0">
-            <ConsolePanel messages={consoleMessages} onClear={handleClearConsole} />
-          </div>
-        </div>
+        <PanelGroup direction="horizontal" className="flex-1 overflow-hidden">
+          {/* Chat Panel - Desktop only */}
+          <Panel 
+            defaultSize={25} 
+            minSize={20} 
+            maxSize={40}
+            className="hidden lg:block border-r border-border bg-card"
+          >
+            <ChatPanel
+              projectId={project.id}
+              onCodeUpdate={handleCodeUpdate}
+              currentCode={clarCode}
+              contractName={project.contractName}
+              network={project.network}
+            />
+          </Panel>
+          
+          <PanelResizeHandle className="w-2 bg-border/50 hover:bg-primary/50 transition-colors cursor-col-resize" />
+          
+          {/* Editor and Console - Flexible area */}
+          <Panel defaultSize={75} minSize={60} className="flex flex-col overflow-hidden">
+            <PanelGroup direction="vertical" className="flex-1 overflow-hidden">
+              {/* Code Editor - Takes most space */}
+              <Panel 
+                defaultSize={75} 
+                minSize={50}
+                className="border-b border-border bg-card relative overflow-hidden"
+              >
+                <CodeEditor code={clarCode} onChange={handleCodeChange} />
+              </Panel>
+              
+              <PanelResizeHandle className="h-2 bg-border/50 hover:bg-primary/50 transition-colors cursor-row-resize" />
+              
+              {/* Console Panel - Fixed height */}
+              <Panel 
+                defaultSize={25} 
+                minSize={20}
+                className="bg-card relative overflow-hidden"
+              >
+                <ConsolePanel messages={consoleMessages} onClear={handleClearConsole} />
+              </Panel>
+            </PanelGroup>
+          </Panel>
+        </PanelGroup>
       </div>
 
       {/* Private Key Dialog */}
