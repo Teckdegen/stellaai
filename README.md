@@ -31,6 +31,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 - 💾 **Local Storage**: Projects saved in your browser's local storage
 - 🌐 **Testnet/Mainnet Support**: Deploy to either Stacks Testnet or Mainnet
 - 🚨 **Enhanced Error Handling**: Detailed error messages with causes and solutions for deployment issues
+- 📜 **Command Line Deployment**: Deploy contracts from the command line with our standalone script
 
 ## Prerequisites
 
@@ -61,6 +62,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 
 ## Usage
 
+### IDE Deployment (Recommended)
 1. **Create a Project:**
    - Enter a contract name
    - Select Testnet or Mainnet
@@ -82,6 +84,16 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
    - Enter your Stacks private key when prompted
    - Confirm deployment
 
+### Command Line Deployment
+You can also deploy contracts directly from the command line:
+```bash
+# Deploy to testnet
+npm run deploy -- --network=testnet --contract=./contracts/my-contract.clar --key=your-private-key
+
+# Deploy to mainnet
+npm run deploy -- --network=mainnet --contract=./contracts/my-contract.clar --key=your-private-key
+```
+
 For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Project Structure
@@ -93,9 +105,12 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 ├── components/            # React components
 ├── lib/                   # Utility functions
 │   ├── clarity-validator.ts # Clarity code validation
+│   ├── contract-deployer.ts # Contract deployment utility
 │   ├── project-storage.ts   # Project storage management
 │   ├── stacks-wallet.ts     # Stacks private key deployment
 │   └── transaction-error-handler.ts # Enhanced error handling
+├── scripts/                # Deployment scripts
+│   └── deploy-contract.ts  # Standalone deployment script
 └── public/                # Static assets
 ```
 

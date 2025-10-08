@@ -12,7 +12,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "deploy": "ts-node scripts/deploy-contract.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "latest",

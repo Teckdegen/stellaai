@@ -10,6 +10,7 @@
 
 ## Deployment Process
 
+### Option 1: IDE Deployment (Recommended)
 1. **Validate Your Contract**: 
    - The IDE automatically validates your Clarity code
    - Fix any errors shown in the console before deploying
@@ -25,6 +26,14 @@
 4. **Confirm Deployment**:
    - Review the transaction details
    - Click "Deploy" to submit to the blockchain
+
+### Option 2: Command Line Deployment
+1. **Prepare your contract**: Save your contract code to a `.clar` file
+2. **Run the deployment script**:
+   ```bash
+   npm run deploy -- --network=testnet --contract=path/to/your-contract.clar --key=your-private-key
+   ```
+3. **View deployment results**: The script will output transaction details and save them to a JSON file
 
 ## Common Issues
 
@@ -84,13 +93,15 @@ import {
   broadcastTransaction,
   AnchorMode 
 } from '@stacks/transactions';
-import { STACKS_TESTNET } from '@stacks/network';
+import { STACKS_TESTNET, STACKS_MAINNET } from '@stacks/network';
 import { readFileSync } from 'fs';
 
 async function deployContract() {
-  const network = new StacksTestnet();
+  // Set network based on user selection
+  const isTestnet = true; // Change to false for mainnet
+  const network = isTestnet ? STACKS_TESTNET : STACKS_MAINNET;
   
-  // Read contract source code
+  // Read contract source code from editor
   const contractSource = readFileSync('./contracts/my-contract.clar', 'utf-8');
   
   const txOptions = {
@@ -109,6 +120,21 @@ async function deployContract() {
   console.log('Transaction ID:', broadcastResponse.txid);
   console.log('Contract address:', `${senderAddress}.${txOptions.contractName}`);
 }
+```
+
+## Command Line Deployment Script
+
+The project includes a standalone deployment script that can be used from the command line:
+
+```bash
+# Deploy to testnet
+npm run deploy -- --network=testnet --contract=./contracts/my-contract.clar --key=your-private-key
+
+# Deploy to mainnet with custom fee
+npm run deploy -- --network=mainnet --contract=./contracts/my-contract.clar --key=your-private-key --fee=15000
+
+# Deploy with custom contract name
+npm run deploy -- --network=testnet --contract=./contracts/my-contract.clar --key=your-private-key --name=my-custom-name
 ```
 
 ## Network Differences
