@@ -122,3 +122,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Ensure proper scrolling for all panels */
+[data-slot="scroll-area"] {
+  @apply h-full w-full;
+}
+
+[data-slot="scroll-area-viewport"] {
+  @apply h-full w-full;
+}
+
+/* Fix for chat panel scrolling */
+.chat-panel-container {
+  @apply h-full flex flex-col;
+}
+
+.chat-messages-container {
+  @apply flex-1 overflow-hidden;
+}
+
+/* Fix for console panel scrolling */
+.console-panel-container {
+  @apply h-full flex flex-col;
+}
+
+.console-messages-container {
+  @apply flex-1 overflow-hidden;
+}
+
+/* Ensure text wraps properly in messages */
+.chat-message-content {
+  @apply whitespace-pre-wrap break-words;
+}
+
+.console-message-content {
+  @apply whitespace-pre-wrap break-words;
+}

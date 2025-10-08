@@ -340,13 +340,15 @@ export default function ProjectPage() {
             maxSize={35}
             className="hidden lg:block border-r border-white/10 bg-black"
           >
-            <ChatPanel
-              projectId={project.id}
-              onCodeUpdate={handleCodeUpdate}
-              currentCode={clarCode}
-              contractName={project.contractName}
-              network={project.network}
-            />
+            <div className="h-full">
+              <ChatPanel
+                projectId={project.id}
+                onCodeUpdate={handleCodeUpdate}
+                currentCode={clarCode}
+                contractName={project.contractName}
+                network={project.network}
+              />
+            </div>
           </Panel>
           
           <PanelResizeHandle className="w-2 bg-white/10 hover:bg-white/20 transition-colors cursor-col-resize" />
@@ -360,7 +362,9 @@ export default function ProjectPage() {
                 minSize={50}
                 className="border-b border-white/10 bg-black relative overflow-hidden"
               >
-                <CodeEditor code={clarCode} onChange={handleCodeChange} fileName={fileName} />
+                <div className="h-full">
+                  <CodeEditor code={clarCode} onChange={handleCodeChange} fileName={fileName} />
+                </div>
               </Panel>
               
               <PanelResizeHandle className="h-2 bg-white/10 hover:bg-white/20 transition-colors cursor-row-resize" />
@@ -371,7 +375,9 @@ export default function ProjectPage() {
                 minSize={25}
                 className="bg-black relative overflow-hidden"
               >
-                <ConsolePanel messages={consoleMessages} onClear={handleClearConsole} />
+                <div className="h-full">
+                  <ConsolePanel messages={consoleMessages} onClear={handleClearConsole} />
+                </div>
               </Panel>
             </PanelGroup>
           </Panel>

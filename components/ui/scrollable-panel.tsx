@@ -28,7 +28,7 @@ export const ScrollablePanel = React.forwardRef<
         })
       }
     }
-  }, [children, autoScroll])
+  }, [children, autoScroll, scrollAreaRef])
 
   return (
     <ScrollArea 

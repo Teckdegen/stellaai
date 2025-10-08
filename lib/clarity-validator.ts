@@ -12,19 +12,27 @@ export function validateClarityCode(code: string): ValidationResult {
 
   // Check for balanced parentheses
   let parenCount = 0
+  let lastParenLine = 1
   lines.forEach((line, index) => {
-    for (const char of line) {
-      if (char === "(") parenCount++
-      if (char === ")") parenCount--
-      if (parenCount < 0) {
-        errors.push({ line: index + 1, message: "Unmatched closing parenthesis" })
-        parenCount = 0
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i]
+      if (char === "(") {
+        parenCount++
+        lastParenLine = index + 1
+      }
+      if (char === ")") {
+        parenCount--
+        lastParenLine = index + 1
+        if (parenCount < 0) {
+          errors.push({ line: index + 1, message: "Unmatched closing parenthesis" })
+          parenCount = 0
+        }
       }
     }
   })
 
   if (parenCount > 0) {
-    errors.push({ line: lines.length, message: `${parenCount} unclosed parenthesis(es)` })
+    errors.push({ line: lastParenLine, message: `${parenCount} unclosed parenthesis(es)` })
   }
 
   // Check for basic Clarity keywords
@@ -45,10 +53,10 @@ export function validateClarityCode(code: string): ValidationResult {
       const match = trimmed.match(/$$define-\w+\s+([^\s$$]+)/)
       if (match && match[1]) {
         const name = match[1]
-        if (!/^[a-z0-9\-?!]+$/.test(name)) {
+        if (!/^[a-z0-9\-_?!]+$/.test(name)) {
           errors.push({
             line: index + 1,
-            message: `Invalid identifier "${name}". Use lowercase letters, numbers, hyphens, ?, and !`,
+            message: `Invalid identifier "${name}". Use lowercase letters, numbers, hyphens, underscores, ?, and !`,
           })
         }
       }
@@ -56,10 +64,12 @@ export function validateClarityCode(code: string): ValidationResult {
 
     // Check for proper function definitions
     if (trimmed.startsWith("(define-public") || trimmed.startsWith("(define-read-only") || trimmed.startsWith("(define-private")) {
-      if (!trimmed.includes("(ok ") && !trimmed.includes("(err ") && !trimmed.includes("begin")) {
+      // Check if the function has a proper return value
+      const hasReturn = trimmed.includes("(ok ") || trimmed.includes("(err ") || trimmed.includes("begin") || trimmed.includes("true") || trimmed.includes("false") || trimmed.includes("none")
+      if (!hasReturn) {
         warnings.push({
           line: index + 1,
-          message: "Public functions should return (ok ...) or (err ...) response types"
+          message: "Public functions should typically return (ok ...) or (err ...) response types"
         })
       }
     }
@@ -103,7 +113,7 @@ export function validateClarityCode(code: string): ValidationResult {
     }
 
     // Check for proper error constant naming
-    if (trimmed.includes("(err ") && !trimmed.includes("ERR-")) {
+    if (trimmed.includes("(err ") && !trimmed.includes("ERR-") && !/u\d+/.test(trimmed)) {
       warnings.push({
         line: index + 1,
         message: "Error codes should use ERR- prefix for consistency (e.g., ERR-NOT-AUTHORIZED)"
@@ -178,7 +188,7 @@ export function getSuggestedFix(error: { line: number; message: string }, code: 
   }
   
   if (error.message.includes("Invalid identifier")) {
-    return "Use only lowercase letters, numbers, hyphens, ?, and ! in function/variable names"
+    return "Use only lowercase letters, numbers, hyphens, underscores, ?, and ! in function/variable names"
   }
   
   if (error.message.includes("define-data-var requires")) {
@@ -203,6 +213,22 @@ export function getSuggestedFix(error: { line: number; message: string }, code: 
   
   if (error.message.includes("Error codes should use")) {
     return "Define error constants: (define-constant ERR-NOT-AUTHORIZED u1)"
+  }
+  
+  if (error.message.includes("begin should be used")) {
+    return "Add more expressions to the begin block or simplify to a single expression"
+  }
+  
+  if (error.message.includes("NFT contract should implement")) {
+    return "Add the required SIP-009 functions: get-owner and transfer"
+  }
+  
+  if (error.message.includes("FT contract should implement")) {
+    return "Add the required SIP-010 functions: transfer and get-balance"
+  }
+  
+  if (error.message.includes("Public functions found")) {
+    return "Add (ok ...) or (err ...) return values to your public functions"
   }
   
   return null
