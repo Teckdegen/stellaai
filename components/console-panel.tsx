@@ -50,7 +50,10 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
     if (scrollAreaRef.current) {
       const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
       if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight
+        // Add a small delay to ensure DOM is updated
+        setTimeout(() => {
+          viewport.scrollTop = viewport.scrollHeight
+        }, 0)
       }
     }
   }

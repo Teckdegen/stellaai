@@ -111,3 +111,8 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Fix for Radix UI ScrollArea */
+.console-messages-container [data-slot="scroll-area-viewport"] {
+  height: 100%;
+}

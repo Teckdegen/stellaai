@@ -1,16 +1,16 @@
 
-
 export const maxDuration = 30
 
 // TODO: Add your Groq API Key (should start with "gsk_")
 const GROQ_API_KEY = "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"
 
-async function callGroq(prompt: string, contractName: string, network: string, currentCode: string) {
+async function callGroq(prompt: string, contractName: string, network: string, currentCode: string, codebaseContext: string) {
   try {
     const contextMessage = `Current context:
 - Contract Name: ${contractName}
 - Network: ${network}
 - Current Code: ${currentCode ? "Yes (" + currentCode.length + " chars)" : "None yet"}
+- Codebase Context: ${codebaseContext || "No additional context provided"}
 
 User's request: ${prompt}`
 
@@ -25,7 +25,26 @@ User's request: ${prompt}`
         messages: [
           {
             role: "system",
-            content: "You are an expert smart contract developer that writes valid Clarity code for the Stacks blockchain. Your responses should ONLY contain Clarity code that can be directly deployed to the Stacks blockchain. Include appropriate comments, error handling, and follow SIP standards. Make sure all parentheses are balanced and functions return (ok ...) or (err ...) responses where appropriate.",
+            content: `You are Stella, an expert smart contract developer and educator for the Stacks blockchain. You can:
+
+1. Generate valid Clarity code that can be directly deployed to the Stacks blockchain
+2. Explain existing code from the codebase in detail
+3. Help users understand how different components work together
+4. Provide best practices and security recommendations
+5. Help with debugging and optimization
+
+When generating code:
+- Include appropriate comments, error handling, and follow SIP standards
+- Make sure all parentheses are balanced
+- Functions should return (ok ...) or (err ...) responses where appropriate
+
+When explaining code:
+- Be thorough and educational
+- Point out key patterns and design decisions
+- Explain the purpose of different functions and variables
+- Highlight any security considerations or best practices
+
+Format your responses clearly with appropriate sections when needed.`,
           },
           {
             role: "user",
@@ -57,12 +76,13 @@ User's request: ${prompt}`
 
 export async function POST(req: Request) {
   try {
-    const { messages, contractName, network, currentCode } = await req.json()
+    const body = await req.json()
+    const { messages, contractName, network, currentCode, codebaseContext } = body
 
     const userMessage = messages[messages.length - 1].content
 
     // Get the AI response
-    const aiResponse = await callGroq(userMessage, contractName, network, currentCode)
+    const aiResponse = await callGroq(userMessage, contractName, network, currentCode, codebaseContext)
 
     if (!aiResponse) {
       throw new Error("Failed to get response from Groq")

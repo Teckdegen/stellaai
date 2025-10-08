@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Sparkles, Loader2 } from "lucide-react"
+import { Send, Sparkles, Loader2, Code, FileText, BookOpen } from "lucide-react"
 import { ChatHistoryManager } from "@/lib/chat-history"
 
 interface Message {
@@ -23,6 +23,35 @@ interface ChatPanelProps {
   network: string
 }
 
+// Mock codebase context - in a real implementation, this would be dynamically generated
+const getCodebaseContext = () => {
+  return `Project Structure:
+- app/page.tsx: Landing page with project creation
+- app/project/[id]/page.tsx: Main IDE interface
+- components/chat-panel.tsx: AI chat interface
+- components/code-editor.tsx: Code editor component
+- components/console-panel.tsx: Console/output panel
+- lib/stacks-wallet.ts: Stacks blockchain integration
+- lib/clarity-validator.ts: Clarity code validation
+- lib/project-storage.ts: Project persistence
+- lib/chat-history.ts: Chat history management
+
+Key Technologies:
+- Next.js 15 with React Server Components
+- TypeScript for type safety
+- Tailwind CSS for styling
+- Radix UI for accessible components
+- Stacks blockchain for smart contract deployment
+- Groq Llama 3.3 70b for AI assistance
+
+Core Features:
+- AI-powered Clarity code generation
+- Real-time syntax validation
+- Private key-based deployment
+- Project management and persistence
+- Chat history with code versioning`
+}
+
 export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, network }: ChatPanelProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -32,12 +61,45 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       return history.messages
     }
     
-    // Enhanced welcome message with useful commands
+    // Comprehensive welcome message with useful commands
     return [
       {
         id: "welcome",
         role: "assistant",
-        content: `Hello! I'm Stella, your Clarity smart contract assistant.\n\nI can help you build secure Stacks blockchain smart contracts. Here are some useful commands to get started:\n\n• "Create an NFT contract" - Generate a standard NFT contract\n• "Create a token contract" - Build a fungible token contract\n• "Add staking functionality" - Implement staking mechanisms\n• "Create a DAO contract" - Build a decentralized autonomous organization\n• "Add access control" - Implement role-based permissions\n\nJust describe what you want to build, and I'll generate the code for you!`,
+        content: `👋 Welcome to Stella AI - Your Clarity Smart Contract Assistant!
+
+I'm here to help you build secure and efficient smart contracts for the Stacks blockchain. Whether you're a beginner or an experienced developer, I can assist you with creating, validating, and deploying Clarity contracts.
+
+✨ **Getting Started Examples:**
+• "Create a comprehensive NFT contract with metadata support"
+• "Build a staking contract with reward distribution"
+• "Generate a DAO contract with proposal voting mechanisms"
+• "Design a token contract with vesting schedules"
+• "Implement access control with role-based permissions"
+
+🔧 **Development Features:**
+• Real-time code validation and error detection
+• Automatic SIP compliance checking
+• Best practices and security recommendations
+• Code optimization suggestions
+• Deployment-ready contract generation
+
+📚 **Codebase Assistance:**
+• "Explain how the deployment system works"
+• "Show me the validation rules"
+• "How does the project storage work?"
+• "What components are in the IDE?"
+
+📈 **Advanced Capabilities:**
+• Multi-contract systems and cross-contract calls
+• Complex data structures and storage patterns
+• Event logging and notification systems
+• Upgradeable contract architectures
+• Integration with DeFi protocols
+
+Just describe what you want to build or ask about the codebase, and I'll help you!
+
+💡 **Pro Tip:** Be as specific as possible about your requirements for the best results.`,
       },
     ]
   })
@@ -149,6 +211,9 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       // Save to chat history
       ChatHistoryManager.saveMessage(projectId, assistantMessage)
 
+      // Get codebase context
+      const codebaseContext = getCodebaseContext()
+
       // Call the API
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -160,6 +225,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
           contractName,
           network,
           currentCode,
+          codebaseContext,
         }),
       })
 
@@ -266,7 +332,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       <div className="p-4 border-t border-border chat-input-container flex-shrink-0 bg-card sticky bottom-0 z-10">
         <form onSubmit={handleSubmit} className="flex gap-2 chat-input-form">
           <Textarea
-            placeholder="Describe what you want to build... (e.g., 'Create an NFT contract')"
+            placeholder="Describe what you want to build or ask about the codebase... (e.g., 'Explain how deployment works')"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -282,7 +348,13 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </form>
-        <p className="text-xs text-muted-foreground mt-2">Press Enter to send, Shift+Enter for new line</p>
+        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+          <span>Press Enter to send, Shift+Enter for new line</span>
+          <div className="flex items-center gap-1">
+            <BookOpen className="w-3 h-3" />
+            <span>Ask about codebase</span>
+          </div>
+        </div>
       </div>
     </div>
   )
