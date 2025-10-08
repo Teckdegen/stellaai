@@ -25,6 +25,7 @@ interface ChatPanelProps {
 
 export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, network }: ChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const viewportRef = useRef<HTMLDivElement>(null)
   const [messages, setMessages] = useState<Message[]>(() => {
     // Load chat history from localStorage
     const history = ChatHistoryManager.getHistory(projectId)
@@ -45,11 +46,20 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
   const [isLoading, setIsLoading] = useState(false)
   const [lastProcessedMessage, setLastProcessedMessage] = useState<string>("")
 
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
+    scrollToBottom()
   }, [messages, isLoading])
+
+  const scrollToBottom = () => {
+    if (viewportRef.current) {
+      // Smooth scroll to bottom
+      viewportRef.current.scrollTo({
+        top: viewportRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }
 
   // Extract code from AI responses
   useEffect(() => {
@@ -161,6 +171,9 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
             }
             return newMessages
           })
+
+          // Scroll to bottom as new content arrives
+          scrollToBottom()
         }
       }
     } catch (error) {
@@ -175,11 +188,13 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       ])
     } finally {
       setIsLoading(false)
+      // Final scroll to bottom
+      setTimeout(scrollToBottom, 100)
     }
   }
 
   return (
-    <div className="flex flex-col h-full bg-card">
+    <div className="flex flex-col h-full bg-card chat-panel-container">
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2">
@@ -189,22 +204,24 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 p-4 chat-messages-container" ref={scrollRef}>
+        <div 
+          ref={viewportRef}
+          className="space-y-4 pr-2"
+        >
           {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{message.content}</p>
+            <div 
+              key={message.id} 
+              className={`flex chat-message ${message.role === "user" ? "user" : "assistant"}`}
+            >
+              <div className="chat-message-content">
+                <p className="whitespace-pre-wrap break-words">{message.content}</p>
               </div>
             </div>
           ))}
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-muted rounded-lg px-3 py-2">
+            <div className="flex justify-start chat-message assistant">
+              <div className="chat-message-content">
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span className="text-xs text-muted-foreground">Stella is thinking...</span>
@@ -216,8 +233,8 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 border-t border-border">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      <div className="p-4 border-t border-border chat-input-container">
+        <form onSubmit={handleSubmit} className="flex gap-2 chat-input-form">
           <Textarea
             placeholder="Describe what you want to build... (e.g., 'Create an NFT contract with minting and SIP-009 compliance')"
             value={input}
@@ -228,10 +245,10 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
                 handleSubmit(e as any)
               }
             }}
-            className="min-h-[60px] resize-none"
+            className="min-h-[60px] resize-none chat-input-textarea"
             disabled={isLoading}
           />
-          <Button type="submit" size="icon" disabled={!input.trim() || isLoading}>
+          <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="self-end chat-send-button">
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </form>
