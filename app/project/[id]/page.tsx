@@ -213,7 +213,7 @@ export default function ProjectPage() {
         })
         setConsoleMessages((prev) => [
           ...prev,
-          { type: "success", message: "Deployment successful!", timestamp: successTimestamp },
+          { type: "success", message: `Deployment successful!`, timestamp: successTimestamp },
           { type: "info", message: `Transaction ID: ${txId}`, timestamp: successTimestamp },
           {
             type: "info",
@@ -257,6 +257,7 @@ export default function ProjectPage() {
   }
 
   const explorerUrl = deployedTxId ? `https://explorer.stacks.co/txid/${deployedTxId}?chain=${project.network}` : null
+  const fileName = `${project.contractName}.clar`
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
@@ -290,7 +291,7 @@ export default function ProjectPage() {
               <Code className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="font-semibold text-base">{project.contractName}</h1>
+              <h1 className="font-semibold text-base">{project.contractName}.clar</h1>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Network className="w-3 h-3" />
                 <span className="capitalize font-medium">{project.network}</span>
@@ -359,7 +360,7 @@ export default function ProjectPage() {
                 minSize={50}
                 className="border-b border-border bg-card relative overflow-hidden"
               >
-                <CodeEditor code={clarCode} onChange={handleCodeChange} />
+                <CodeEditor code={clarCode} onChange={handleCodeChange} fileName={fileName} />
               </Panel>
               
               <PanelResizeHandle className="h-2 bg-border/50 hover:bg-primary/50 transition-colors cursor-row-resize" />

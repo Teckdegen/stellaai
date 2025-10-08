@@ -116,7 +116,10 @@ Just describe what you want to build or ask about the codebase, and I'll help yo
     if (scrollAreaRef.current) {
       const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
       if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight
+        // Add a small delay to ensure DOM is updated
+        setTimeout(() => {
+          viewport.scrollTop = viewport.scrollHeight
+        }, 0)
       }
     }
   }

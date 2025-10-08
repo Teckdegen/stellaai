@@ -6,13 +6,18 @@ const GROQ_API_KEY = "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"
 
 async function callGroq(prompt: string, contractName: string, network: string, currentCode: string, codebaseContext: string) {
   try {
-    const contextMessage = `Current context:
+    const contextMessage = `Current project context:
 - Contract Name: ${contractName}
 - Network: ${network}
 - Current Code: ${currentCode ? "Yes (" + currentCode.length + " chars)" : "None yet"}
 - Codebase Context: ${codebaseContext || "No additional context provided"}
 
-User's request: ${prompt}`
+User's request: ${prompt}
+
+Important: When generating Clarity code, use the contract name "${contractName}" in the contract definition.
+For example, if creating an NFT contract, use:
+(define-non-fungible-token ${contractName}-nft uint)
+or similar patterns that incorporate the contract name.`
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -37,6 +42,8 @@ When generating code:
 - Include appropriate comments, error handling, and follow SIP standards
 - Make sure all parentheses are balanced
 - Functions should return (ok ...) or (err ...) responses where appropriate
+- ALWAYS use the provided contract name in the generated code
+- Create meaningful function and variable names based on the contract purpose
 
 When explaining code:
 - Be thorough and educational
@@ -76,8 +83,7 @@ Format your responses clearly with appropriate sections when needed.`,
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const { messages, contractName, network, currentCode, codebaseContext } = body
+    const { messages, contractName, network, currentCode, codebaseContext } = await req.json()
 
     const userMessage = messages[messages.length - 1].content
 

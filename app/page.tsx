@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Code2, Sparkles, Shield, Zap, Clock, Trash2, FolderOpen, Menu, BookOpen, Lightbulb, Play, FileCode, Terminal, Github, Twitter, Youtube } from "lucide-react"
+import { Code2, Sparkles, Shield, Zap, Clock, Trash2, FolderOpen, Menu, BookOpen, Lightbulb, Play, FileCode, Terminal, Github, Twitter, Youtube, FileText, Folder, Settings, Search } from "lucide-react"
 import { ProjectStorage, type Project } from "@/lib/project-storage"
 import {
   AlertDialog,
@@ -24,9 +24,9 @@ import Image from "next/image"
 
 export default function LandingPage() {
   const router = useRouter()
-  const [contractName, setContractName] = useState("")
+  const [contractName, setContractName] = useState<string>("")
   const [network, setNetwork] = useState<"testnet" | "mainnet">("testnet")
-  const [isCreating, setIsCreating] = useState(false)
+  const [isCreating, setIsCreating] = useState<boolean>(false)
   const [recentProjects, setRecentProjects] = useState<Project[]>([])
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
 
@@ -116,320 +116,313 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Professional Header */}
-      <header className="border-b border-border sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-primary" />
+      {/* VS Code-like Header */}
+      <header className="border-b border-border bg-[#3c3c3c] text-[#cccccc]">
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              <div className="w-3 h-3 rounded-full bg-[#ff5f57]"></div>
+              <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+              <div className="w-3 h-3 rounded-full bg-[#28c940]"></div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold">Stella AI</h1>
-              <p className="text-xs text-muted-foreground">Clarity Smart Contract IDE</p>
+            <div className="ml-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-blue-400" />
+              <span className="font-medium">Stella AI - Clarity IDE</span>
             </div>
           </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="rounded-full">
-              <BookOpen className="w-4 h-4 mr-2" />
-              Documentation
-            </Button>
-            <Button variant="ghost" size="sm" className="rounded-full">
-              <Lightbulb className="w-4 h-4 mr-2" />
-              Examples
-            </Button>
-            <Button variant="ghost" size="sm" className="rounded-full">
-              <Github className="w-4 h-4 mr-2" />
-              GitHub
-            </Button>
+          <div className="flex items-center gap-4 text-sm">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Run</span>
+            <span>Terminal</span>
+            <span>Help</span>
           </div>
-
-          {/* Mobile Navigation */}
-          <Sheet>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Menu className="w-5 h-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <div className="flex flex-col gap-4 mt-8">
-                <Button variant="ghost" className="justify-start rounded-full">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Documentation
-                </Button>
-                <Button variant="ghost" className="justify-start rounded-full">
-                  <Lightbulb className="w-4 h-4 mr-2" />
-                  Examples
-                </Button>
-                <Button variant="ghost" className="justify-start rounded-full">
-                  <Github className="w-4 h-4 mr-2" />
-                  GitHub
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Editor Preview and Info */}
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <h1 className="text-3xl md:text-4xl font-bold">
-                AI-Powered <span className="text-primary">Clarity</span> Development
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Build, test, and deploy secure Stacks blockchain smart contracts with the power of AI. 
-                No blockchain experience required.
-              </p>
+      {/* Main Content - VS Code Layout */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <div className="w-64 bg-[#333333] text-[#cccccc] flex flex-col">
+          <div className="p-4 border-b border-[#3c3c3c]">
+            <h2 className="font-semibold flex items-center gap-2">
+              <Folder className="w-4 h-4" />
+              EXPLORER
+            </h2>
+          </div>
+          <div className="flex-1 p-2">
+            <div className="text-xs font-semibold mb-2 flex items-center gap-1">
+              <FolderOpen className="w-3 h-3" />
+              RECENT PROJECTS
             </div>
-
-            {/* Editor Preview */}
-            <Card className="border-border shadow-lg">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <FileCode className="w-5 h-5 text-primary" />
-                    contracts/nft-sample.clar
-                  </CardTitle>
-                  <div className="flex gap-1">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            <div className="space-y-1">
+              {recentProjects.length > 0 ? (
+                recentProjects.map((project) => (
+                  <div 
+                    key={project.id}
+                    className="flex items-center gap-2 p-1 rounded hover:bg-[#3c3c3c] cursor-pointer text-xs"
+                    onClick={() => router.push(`/project/${project.id}`)}
+                  >
+                    <FileCode className="w-3 h-3" />
+                    <span className="truncate">{project.contractName}.clar</span>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="h-64 rounded-b-lg border-t border-border bg-[#1e1e1e]">
-                  <pre className="text-sm p-4 font-mono text-green-400 overflow-x-auto">
-                    <code>{sampleCode}</code>
-                  </pre>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                ))
+              ) : (
+                <div className="text-xs text-[#888888] p-1">No recent projects</div>
+              )}
+            </div>
+          </div>
+        </div>
 
-            {/* Features */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Card className="p-4 text-center">
-                <Shield className="w-8 h-8 text-primary mx-auto mb-2" />
-                <h3 className="font-semibold">Secure</h3>
-                <p className="text-xs text-muted-foreground">Built-in validation and best practices</p>
-              </Card>
-              <Card className="p-4 text-center">
-                <Zap className="w-8 h-8 text-primary mx-auto mb-2" />
-                <h3 className="font-semibold">Fast</h3>
-                <p className="text-xs text-muted-foreground">Powered by Groq's Llama 3.3 70b</p>
-              </Card>
-              <Card className="p-4 text-center">
-                <Play className="w-8 h-8 text-primary mx-auto mb-2" />
-                <h3 className="font-semibold">Deploy</h3>
-                <p className="text-xs text-muted-foreground">One-click deployment to Stacks</p>
-              </Card>
+        {/* Main Editor Area */}
+        <div className="flex-1 flex flex-col bg-[#1e1e1e]">
+          {/* Tab Bar */}
+          <div className="flex bg-[#252526] border-b border-[#3c3c3c]">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#1e1e1e] border-r border-[#3c3c3c]">
+              <FileCode className="w-4 h-4 text-blue-400" />
+              <span className="text-sm text-[#cccccc]">Welcome.md</span>
             </div>
           </div>
 
-          {/* Right Column - Create Project and Recent */}
-          <div className="space-y-6">
-            {/* Create Project Card */}
-            <Card className="p-6 space-y-6 shadow-lg">
-              <CardHeader className="p-0">
-                <CardTitle>Create New Project</CardTitle>
-                <CardDescription>Start building your smart contract with AI assistance</CardDescription>
-              </CardHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="contract-name">Contract Name</Label>
-                  <Input
-                    id="contract-name"
-                    placeholder="my-awesome-contract"
-                    value={contractName}
-                    onChange={(e) => setContractName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleCreateProject()}
-                    className="rounded-lg px-4 py-2"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Network</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      variant={network === "testnet" ? "default" : "outline"}
-                      className="w-full rounded-lg"
-                      onClick={() => setNetwork("testnet")}
-                    >
-                      Testnet
-                    </Button>
-                    <Button
-                      variant={network === "mainnet" ? "default" : "outline"}
-                      className="w-full rounded-lg"
-                      onClick={() => setNetwork("mainnet")}
-                    >
-                      Mainnet
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                className="w-full rounded-lg py-2"
-                size="lg"
-                onClick={handleCreateProject}
-                disabled={!contractName.trim() || isCreating}
-              >
-                {isCreating ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
-                    Creating Project...
-                  </div>
-                ) : (
-                  "Create New Project"
-                )}
-              </Button>
-            </Card>
-
-            {/* Recent Projects */}
-            {recentProjects.length > 0 && (
-              <Card className="p-6">
-                <CardHeader className="p-0 mb-4">
-                  <CardTitle className="flex items-center gap-2">
-                    <FolderOpen className="w-5 h-5" />
-                    Recent Projects
-                  </CardTitle>
-                </CardHeader>
-                <div className="space-y-3">
-                  {recentProjects.map((project) => (
-                    <div
-                      key={project.id}
-                      className="p-3 hover:bg-accent rounded-lg cursor-pointer group border transition-colors flex items-center justify-between"
-                      onClick={() => router.push(`/project/${project.id}`)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Code2 className="w-4 h-4 text-primary" />
-                        </div>
-                        <div className="text-left">
-                          <h3 className="font-medium text-sm truncate max-w-[120px]">{project.contractName}</h3>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                            <span className="capitalize font-medium px-2 py-0.5 bg-muted rounded-full">
-                              {project.network}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              <span>{formatDate(project.updatedAt)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 h-8 w-8"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setProjectToDelete(project.id)
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
+          {/* Editor Content */}
+          <div className="flex-1 flex flex-col md:flex-row">
+            {/* Left Column - Editor Preview */}
+            <div className="flex-1 p-6 overflow-auto">
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-[#2d2d30] rounded-lg border border-[#3c3c3c] overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-2 bg-[#3c3c3c]">
+                    <h1 className="text-xl font-bold text-[#cccccc]">Welcome to Stella AI</h1>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" className="text-[#cccccc] hover:bg-[#3c3c3c]">
+                        <Settings className="w-4 h-4" />
                       </Button>
                     </div>
-                  ))}
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-6">
+                      <div className="text-center">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 mb-4">
+                          <Sparkles className="w-8 h-8 text-blue-400" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-[#cccccc] mb-2">AI-Powered Clarity Development</h2>
+                        <p className="text-[#cccccc]/70">
+                          Build, test, and deploy secure Stacks blockchain smart contracts with the power of AI
+                        </p>
+                      </div>
+
+                      {/* Create Project Section */}
+                      <Card className="bg-[#252526] border-[#3c3c3c]">
+                        <CardHeader>
+                          <CardTitle className="text-[#cccccc] flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-blue-400" />
+                            Create New Project
+                          </CardTitle>
+                          <CardDescription className="text-[#cccccc]/70">
+                            Start building your smart contract with AI assistance
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="contract-name" className="text-[#cccccc]">Contract Name</Label>
+                              <Input
+                                id="contract-name"
+                                placeholder="my-awesome-contract"
+                                value={contractName}
+                                onChange={(e) => setContractName(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && handleCreateProject()}
+                                className="bg-[#3c3c3c] border-[#3c3c3c] text-[#cccccc] rounded px-3 py-2"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-[#cccccc]">Network</Label>
+                              <div className="grid grid-cols-2 gap-3">
+                                <Button
+                                  variant={network === "testnet" ? "default" : "outline"}
+                                  className={`rounded ${network === "testnet" ? "bg-blue-600 hover:bg-blue-700" : "bg-[#3c3c3c] border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c]"}`}
+                                  onClick={() => setNetwork("testnet")}
+                                >
+                                  Testnet
+                                </Button>
+                                <Button
+                                  variant={network === "mainnet" ? "default" : "outline"}
+                                  className={`rounded ${network === "mainnet" ? "bg-blue-600 hover:bg-blue-700" : "bg-[#3c3c3c] border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c]"}`}
+                                  onClick={() => setNetwork("mainnet")}
+                                >
+                                  Mainnet
+                                </Button>
+                              </div>
+                            </div>
+
+                            <Button
+                              className="w-full rounded bg-blue-600 hover:bg-blue-700"
+                              size="lg"
+                              onClick={handleCreateProject}
+                              disabled={!contractName.trim() || isCreating}
+                            >
+                              {isCreating ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
+                                  Creating Project...
+                                </div>
+                              ) : (
+                                "Create New Project"
+                              )}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Features */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                        <div className="bg-[#252526] p-4 rounded-lg border border-[#3c3c3c]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Shield className="w-5 h-5 text-green-400" />
+                            <h3 className="font-semibold text-[#cccccc]">Secure</h3>
+                          </div>
+                          <p className="text-sm text-[#cccccc]/70">
+                            Built-in validation and best practices for secure smart contracts
+                          </p>
+                        </div>
+                        <div className="bg-[#252526] p-4 rounded-lg border border-[#3c3c3c]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Zap className="w-5 h-5 text-yellow-400" />
+                            <h3 className="font-semibold text-[#cccccc]">Fast</h3>
+                          </div>
+                          <p className="text-sm text-[#cccccc]/70">
+                            Powered by Groq's Llama 3.3 70b for instant code generation
+                          </p>
+                        </div>
+                        <div className="bg-[#252526] p-4 rounded-lg border border-[#3c3c3c]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Play className="w-5 h-5 text-blue-400" />
+                            <h3 className="font-semibold text-[#cccccc]">Deploy</h3>
+                          </div>
+                          <p className="text-sm text-[#cccccc]/70">
+                            One-click deployment to Stacks blockchain with private key
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </Card>
-            )}
-
-            {/* Community Links */}
-            <Card className="p-6">
-              <CardHeader className="p-0 mb-4">
-                <CardTitle>Join the Community</CardTitle>
-                <CardDescription>Connect with other Clarity developers</CardDescription>
-              </CardHeader>
-              <div className="flex gap-3">
-                <Button variant="outline" size="sm" className="flex-1 rounded-lg">
-                  <Github className="w-4 h-4 mr-2" />
-                  GitHub
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 rounded-lg">
-                  <Twitter className="w-4 h-4 mr-2" />
-                  Twitter
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 rounded-lg">
-                  <Youtube className="w-4 h-4 mr-2" />
-                  YouTube
-                </Button>
               </div>
-            </Card>
+            </div>
+
+            {/* Right Column - Recent Projects and Community */}
+            <div className="w-full md:w-80 bg-[#252526] border-l border-[#3c3c3c] p-4 overflow-auto">
+              <div className="space-y-6">
+                {/* Recent Projects */}
+                {recentProjects.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-[#cccccc] mb-3 flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Recent Projects
+                    </h3>
+                    <div className="space-y-2">
+                      {recentProjects.map((project) => (
+                        <div
+                          key={project.id}
+                          className="p-3 bg-[#3c3c3c] rounded hover:bg-[#3c3c3c]/70 cursor-pointer group flex items-center justify-between"
+                          onClick={() => router.push(`/project/${project.id}`)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <FileCode className="w-4 h-4 text-blue-400" />
+                            <div>
+                              <div className="text-sm text-[#cccccc] font-medium">{project.contractName}.clar</div>
+                              <div className="text-xs text-[#cccccc]/70 flex items-center gap-1">
+                                <span className="capitalize">{project.network}</span>
+                                <span>•</span>
+                                <span>{formatDate(project.updatedAt)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-0 group-hover:opacity-100 h-6 w-6 text-[#cccccc] hover:bg-[#3c3c3c]"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setProjectToDelete(project.id)
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3 text-red-400" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Start */}
+                <div>
+                  <h3 className="text-sm font-semibold text-[#cccccc] mb-3">Quick Start</h3>
+                  <div className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start text-left bg-[#3c3c3c] border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c]/70">
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Documentation
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start text-left bg-[#3c3c3c] border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c]/70">
+                      <Lightbulb className="w-4 h-4 mr-2" />
+                      Examples
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start text-left bg-[#3c3c3c] border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c]/70">
+                      <Github className="w-4 h-4 mr-2" />
+                      GitHub
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Community */}
+                <div>
+                  <h3 className="text-sm font-semibold text-[#cccccc] mb-3">Join the Community</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button variant="outline" size="sm" className="bg-[#3c3c3c] border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c]/70">
+                      <Github className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" className="bg-[#3c3c3c] border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c]/70">
+                      <Twitter className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" className="bg-[#3c3c3c] border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c]/70">
+                      <Youtube className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Features Section */}
-        <div className="mt-16">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold mb-2">Powerful Features for Smart Contract Development</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to build, test, and deploy secure Stacks blockchain smart contracts
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card className="p-6 space-y-4 rounded-xl border shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg">AI-Powered Generation</h3>
-              <p className="text-sm text-muted-foreground">
-                Describe your contract in plain English and let Stella generate production-ready Clarity code.
-              </p>
-            </Card>
-
-            <Card className="p-6 space-y-4 rounded-xl border shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg">Built-in Validation</h3>
-              <p className="text-sm text-muted-foreground">
-                Automatic syntax checking and error detection before deployment to prevent costly mistakes.
-              </p>
-            </Card>
-
-            <Card className="p-6 space-y-4 rounded-xl border shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Terminal className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg">Real-time Feedback</h3>
-              <p className="text-sm text-muted-foreground">
-                Get instant feedback and suggestions as you build, with detailed explanations of best practices.
-              </p>
-            </Card>
-          </div>
+      {/* Status Bar */}
+      <div className="flex items-center justify-between px-4 py-1 bg-blue-600 text-xs text-white">
+        <div className="flex items-center gap-4">
+          <span>Stella AI IDE</span>
+          <span>Ready</span>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-border py-8 mt-12">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-muted-foreground">
-            Built with ❤️ for the Stacks ecosystem. Powered by Groq's Llama 3.3 70b model.
-          </p>
+        <div className="flex items-center gap-4">
+          <span>Ln 1, Col 1</span>
+          <span>UTF-8</span>
+          <span>Clarity</span>
         </div>
-      </footer>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!projectToDelete} onOpenChange={() => setProjectToDelete(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-[#2d2d30] border-[#3c3c3c]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Project</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-[#cccccc]">Delete Project</AlertDialogTitle>
+            <AlertDialogDescription className="text-[#cccccc]/70">
               Are you sure you want to delete this project? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="bg-[#3c3c3c] text-[#cccccc] border-[#3c3c3c] hover:bg-[#3c3c3c]/70">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => projectToDelete && handleDeleteProject(projectToDelete)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-full"
+              className="bg-red-600 text-white hover:bg-red-700"
             >
               Delete
             </AlertDialogAction>

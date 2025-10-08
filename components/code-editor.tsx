@@ -9,9 +9,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 interface CodeEditorProps {
   code: string
   onChange?: (code: string) => void
+  fileName?: string
 }
 
-export function CodeEditor({ code, onChange }: CodeEditorProps) {
+export function CodeEditor({ code, onChange, fileName = "contract.clar" }: CodeEditorProps) {
   const [copied, setCopied] = useState(false)
   const [localCode, setLocalCode] = useState(code)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -31,7 +32,7 @@ export function CodeEditor({ code, onChange }: CodeEditorProps) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "main.clar"
+    a.download = fileName
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -53,7 +54,7 @@ export function CodeEditor({ code, onChange }: CodeEditorProps) {
       <div className="px-4 py-2 border-b border-border flex items-center justify-between bg-[#252526]">
         <div className="flex items-center gap-2">
           <FileCode className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">contracts/main.clar</span>
+          <span className="text-sm font-medium text-foreground">contracts/{fileName}</span>
           <span className="text-xs text-primary">Editable</span>
         </div>
         {localCode && (
