@@ -41,9 +41,9 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
   }
 
   return (
-    <div className="console-panel-container h-full flex flex-col">
+    <div className="console-panel-container h-full flex flex-col bg-background">
       {/* Header */}
-      <div className="console-header px-4 py-2 border-b border-border flex items-center justify-between">
+      <div className="console-header px-4 py-2 border-b border-border flex items-center justify-between bg-card">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">Console</span>
@@ -52,7 +52,7 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
           </span>
         </div>
         {messages.length > 0 && onClear && (
-          <Button variant="ghost" size="sm" onClick={onClear} className="rounded-full">
+          <Button variant="ghost" size="sm" onClick={onClear} className="rounded-full h-8 px-2">
             <Trash2 className="w-3 h-3 mr-1" />
             Clear
           </Button>
@@ -60,31 +60,44 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
       </div>
 
       {/* Console Output with improved scrolling */}
-      <ScrollArea className="console-messages-container flex-1" ref={scrollRef}>
+      <ScrollArea className="console-messages-container flex-1 p-4" ref={scrollRef}>
         <div 
           ref={viewportRef}
-          className="space-y-1 font-mono text-xs"
+          className="space-y-2 font-mono text-xs"
         >
           {messages.length === 0 ? (
-            <div className="console-empty-state">
-              <Terminal className="w-4 h-4" />
-              <span>Console output will appear here...</span>
+            <div className="console-empty-state h-full flex flex-col items-center justify-center text-muted-foreground">
+              <Terminal className="w-8 h-8 mb-2 opacity-50" />
+              <span className="text-sm">Console output will appear here...</span>
+              <span className="text-xs mt-1">Start building your smart contract to see logs</span>
             </div>
           ) : (
             messages.map((msg, index) => (
-              <div key={index} className="console-message">
-                <span className="console-message-timestamp">
-                  {msg.timestamp || getTimestamp()}
-                </span>
-                <div className="console-message-icon">
+              <div key={index} className="console-message flex items-start gap-2 p-2 rounded hover:bg-muted/50 transition-colors">
+                <div className="console-message-icon mt-0.5 flex-shrink-0">
                   {msg.type === "info" && <Info className="w-3 h-3 text-blue-500" />}
                   {msg.type === "error" && <AlertCircle className="w-3 h-3 text-red-500" />}
                   {msg.type === "success" && <CheckCircle className="w-3 h-3 text-green-500" />}
                   {msg.type === "warning" && <AlertTriangle className="w-3 h-3 text-yellow-500" />}
                 </div>
-                <span className={`console-message-content ${msg.type}`}>
-                  {msg.message}
-                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="console-message-timestamp text-muted-foreground text-[10px] font-medium">
+                      {msg.timestamp || getTimestamp()}
+                    </span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      msg.type === "info" ? "bg-blue-500/10 text-blue-500" :
+                      msg.type === "error" ? "bg-red-500/10 text-red-500" :
+                      msg.type === "success" ? "bg-green-500/10 text-green-500" :
+                      "bg-yellow-500/10 text-yellow-500"
+                    }`}>
+                      {msg.type.toUpperCase()}
+                    </span>
+                  </div>
+                  <span className={`console-message-content ${msg.type} block whitespace-pre-wrap break-words`}>
+                    {msg.message}
+                  </span>
+                </div>
               </div>
             ))
           )}

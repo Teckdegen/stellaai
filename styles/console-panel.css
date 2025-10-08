@@ -3,6 +3,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  background-color: hsl(var(--background));
 }
 
 .console-header {
@@ -27,8 +28,8 @@
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  padding: 0.25rem;
-  border-radius: 0.125rem;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
 }
 
 .console-message:hover {
@@ -43,7 +44,7 @@
   font-family: monospace;
 }
 
-.console-message-icon {
+.console-message {
   flex-shrink: 0;
   margin-top: 0.125rem;
 }
@@ -74,10 +75,11 @@
 .console-empty-state {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  flex-direction: column;
   color: hsl(var(--muted-foreground));
   height: 100%;
-  justify-content: center;
+  text-align: center;
 }
 
 /* Scrollbar styling for console */

@@ -33,12 +33,12 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       return history.messages
     }
     
-    // Simplified welcome message with white background
+    // Enhanced welcome message with useful commands
     return [
       {
         id: "welcome",
         role: "assistant",
-        content: `Hello! I'm Stella, your Clarity smart contract assistant.\n\nDescribe what you'd like to build, and I'll generate the code for you.\n\nExamples:\n- "Create an NFT contract"\n- "Add staking functionality"\n- "Create a token contract"`,
+        content: `Hello! I'm Stella, your Clarity smart contract assistant.\n\nI can help you build secure Stacks blockchain smart contracts. Here are some useful commands to get started:\n\n• "Create an NFT contract" - Generate a standard NFT contract\n• "Create a token contract" - Build a fungible token contract\n• "Add staking functionality" - Implement staking mechanisms\n• "Create a DAO contract" - Build a decentralized autonomous organization\n• "Add access control" - Implement role-based permissions\n\nJust describe what you want to build, and I'll generate the code for you!`,
       },
     ]
   })
@@ -193,7 +193,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
   return (
     <div className="flex flex-col h-full bg-card chat-panel-container">
       {/* Header */}
-      <div className="p-4 border-b border-border flex-shrink-0">
+      <div className="p-4 border-b border-border flex-shrink-0 bg-card sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
           <h2 className="font-semibold text-sm">Stella AI</h2>
@@ -212,10 +212,12 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
               className={`flex chat-message ${message.role === "user" ? "user" : "assistant"}`}
             >
               <div 
-                className={`chat-message-content ${
-                  message.id === "welcome" 
-                    ? "bg-white text-foreground border border-border" 
-                    : ""
+                className={`chat-message-content rounded-lg p-3 max-w-[90%] ${
+                  message.role === "user" 
+                    ? "bg-primary text-primary-foreground ml-auto" 
+                    : message.id === "welcome"
+                      ? "bg-white text-foreground border border-border"
+                      : "bg-muted text-foreground"
                 }`}
               >
                 <p className="whitespace-pre-wrap break-words">{message.content}</p>
@@ -224,7 +226,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
           ))}
           {isLoading && (
             <div className="flex justify-start chat-message assistant">
-              <div className="chat-message-content">
+              <div className="chat-message-content bg-muted text-foreground rounded-lg p-3">
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span className="text-xs text-muted-foreground">Stella is thinking...</span>
@@ -236,7 +238,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       </ScrollArea>
 
       {/* Input - Fixed at bottom */}
-      <div className="p-4 border-t border-border chat-input-container flex-shrink-0">
+      <div className="p-4 border-t border-border chat-input-container flex-shrink-0 bg-card sticky bottom-0 z-10">
         <form onSubmit={handleSubmit} className="flex gap-2 chat-input-form">
           <Textarea
             placeholder="Describe what you want to build... (e.g., 'Create an NFT contract')"
@@ -251,7 +253,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
             className="min-h-[60px] resize-none chat-input-textarea"
             disabled={isLoading}
           />
-          <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="self-end chat-send-button h-[60px]">
+          <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="self-end chat-send-button h-[60px] rounded-full">
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </form>
