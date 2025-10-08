@@ -328,10 +328,10 @@ export default function ProjectPage() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - Fixed layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Chat Panel - Desktop only */}
-        <div className="hidden lg:block w-1/4 border-r border-border bg-card">
+        {/* Chat Panel - Desktop only, fixed width */}
+        <div className="hidden lg:block w-1/4 border-r border-border bg-card flex-shrink-0">
           <ChatPanel
             projectId={project.id}
             onCodeUpdate={handleCodeUpdate}
@@ -341,15 +341,15 @@ export default function ProjectPage() {
           />
         </div>
 
-        {/* Editor and Console */}
+        {/* Editor and Console - Flexible area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Code Editor */}
+          {/* Code Editor - Takes most space */}
           <div className="flex-1 border-b border-border overflow-hidden bg-card">
             <CodeEditor code={clarCode} onChange={handleCodeChange} />
           </div>
 
-          {/* Console Panel */}
-          <div className="h-1/4 overflow-hidden bg-card">
+          {/* Console Panel - Fixed height */}
+          <div className="h-1/4 overflow-hidden bg-card flex-shrink-0">
             <ConsolePanel messages={consoleMessages} onClear={handleClearConsole} />
           </div>
         </div>

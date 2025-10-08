@@ -53,11 +53,8 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
 
   const scrollToBottom = () => {
     if (viewportRef.current) {
-      // Smooth scroll to bottom
-      viewportRef.current.scrollTo({
-        top: viewportRef.current.scrollHeight,
-        behavior: 'smooth'
-      })
+      // Instant scroll to bottom for better responsiveness
+      viewportRef.current.scrollTop = viewportRef.current.scrollHeight
     }
   }
 
@@ -196,7 +193,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
   return (
     <div className="flex flex-col h-full bg-card chat-panel-container">
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border flex-shrink-0">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
           <h2 className="font-semibold text-sm">Stella AI</h2>
@@ -232,8 +229,8 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
         </div>
       </ScrollArea>
 
-      {/* Input */}
-      <div className="p-4 border-t border-border chat-input-container">
+      {/* Input - Fixed at bottom */}
+      <div className="p-4 border-t border-border chat-input-container flex-shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-2 chat-input-form">
           <Textarea
             placeholder="Describe what you want to build... (e.g., 'Create an NFT contract with minting and SIP-009 compliance')"
@@ -248,7 +245,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
             className="min-h-[60px] resize-none chat-input-textarea"
             disabled={isLoading}
           />
-          <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="self-end chat-send-button">
+          <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="self-end chat-send-button h-[60px]">
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </form>
