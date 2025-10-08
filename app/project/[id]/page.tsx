@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Play, Home, Loader2, ExternalLink, Menu, Code, Network } from "lucide-react"
+import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircle, AlertCircle, Send, Wifi } from "lucide-react"
 import { ChatPanel } from "@/components/chat-panel"
 import { CodeEditor } from "@/components/code-editor"
 import { ConsolePanel } from "@/components/console-panel"
@@ -109,7 +109,7 @@ export default function ProjectPage() {
         ...prev,
         {
           type: "success",
-          message: "✓ Code validation passed",
+          message: "Code validation passed",
           timestamp,
         },
       ])
@@ -134,7 +134,7 @@ export default function ProjectPage() {
       })
       setConsoleMessages((prev) => [
         ...prev,
-        { type: "error", message: "⚠ Project data not loaded", timestamp },
+        { type: "error", message: "Project data not loaded", timestamp },
       ])
       return
     }
@@ -150,7 +150,7 @@ export default function ProjectPage() {
     if (!validation.isValid) {
       setConsoleMessages((prev) => [
         ...prev,
-        { type: "error", message: "⚠ Cannot deploy: Code has validation errors", timestamp },
+        { type: "error", message: "Cannot deploy: Code has validation errors", timestamp },
       ])
       return
     }
@@ -159,7 +159,7 @@ export default function ProjectPage() {
     if (validation.warnings.length > 0) {
       setConsoleMessages((prev) => [
         ...prev,
-        { type: "info", message: `⚠ Code has ${validation.warnings.length} warning(s). Review before deploying.`, timestamp },
+        { type: "info", message: `Code has ${validation.warnings.length} warning(s). Review before deploying.`, timestamp },
       ])
     }
 
@@ -167,7 +167,7 @@ export default function ProjectPage() {
     if (!clarCode || !clarCode.trim()) {
       setConsoleMessages((prev) => [
         ...prev,
-        { type: "error", message: "⚠ Cannot deploy: No code to deploy", timestamp },
+        { type: "error", message: "Cannot deploy: No code to deploy", timestamp },
       ])
       return
     }
@@ -190,8 +190,8 @@ export default function ProjectPage() {
     setShowPrivateKeyDialog(false)
     setConsoleMessages((prev) => [
       ...prev,
-      { type: "info", message: "🚀 Initiating deployment to Stacks blockchain...", timestamp },
-      { type: "info", message: `📡 Network: ${project.network}`, timestamp },
+      { type: "info", message: "Initiating deployment to Stacks blockchain...", timestamp },
+      { type: "info", message: `Network: ${project.network}`, timestamp },
     ])
 
     // Add safety checks for required project properties
@@ -212,11 +212,11 @@ export default function ProjectPage() {
         })
         setConsoleMessages((prev) => [
           ...prev,
-          { type: "success", message: `✅ Deployment successful!`, timestamp: successTimestamp },
+          { type: "success", message: "Deployment successful!", timestamp: successTimestamp },
           { type: "info", message: `Transaction ID: ${txId}`, timestamp: successTimestamp },
           {
             type: "info",
-            message: `🔍 View on explorer: https://explorer.stacks.co/txid/${txId}?chain=${network}`,
+            message: `View on explorer: https://explorer.stacks.co/txid/${txId}?chain=${network}`,
             timestamp: successTimestamp,
           },
         ])
@@ -233,7 +233,7 @@ export default function ProjectPage() {
         })
         setConsoleMessages((prev) => [
           ...prev,
-          { type: "error", message: `❌ Deployment failed: ${error}`, timestamp: errorTimestamp },
+          { type: "error", message: `Deployment failed: ${error}`, timestamp: errorTimestamp },
         ])
         setIsDeploying(false)
       },
@@ -360,7 +360,7 @@ export default function ProjectPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <span>🔐</span>
+              <Key className="w-5 h-5" />
               <span>Deploy Contract</span>
             </DialogTitle>
             <DialogDescription>
@@ -400,7 +400,7 @@ export default function ProjectPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <span>🎉</span>
+              <CheckCircle className="w-5 h-5 text-green-500" />
               <span>Deployment Successful!</span>
             </DialogTitle>
             <DialogDescription>Your contract has been deployed to the Stacks {project.network}.</DialogDescription>

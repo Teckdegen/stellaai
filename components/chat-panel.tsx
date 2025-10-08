@@ -33,12 +33,12 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       return history.messages
     }
     
-    // Default welcome message if no history
+    // Simplified welcome message with white background
     return [
       {
         id: "welcome",
         role: "assistant",
-        content: `Hello! I'm Stella, your expert Clarity smart contract assistant for the Stacks blockchain. I can help you build secure, efficient, and standards-compliant contracts.\n\nTell me what you'd like to create, and I'll generate production-ready code for you.\n\nExamples:\n- "Create a SIP-009 compliant NFT contract with minting"\n- "Add staking functionality with time-based rewards"\n- "Create a marketplace with royalties and escrow"\n- "Implement a DAO with proposal voting"\n\nI'll validate your code for syntax, security, and best practices as we work together!`,
+        content: `Hello! I'm Stella, your Clarity smart contract assistant.\n\nDescribe what you'd like to build, and I'll generate the code for you.\n\nExamples:\n- "Create an NFT contract"\n- "Add staking functionality"\n- "Create a token contract"`,
       },
     ]
   })
@@ -211,7 +211,13 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
               key={message.id} 
               className={`flex chat-message ${message.role === "user" ? "user" : "assistant"}`}
             >
-              <div className="chat-message-content">
+              <div 
+                className={`chat-message-content ${
+                  message.id === "welcome" 
+                    ? "bg-white text-foreground border border-border" 
+                    : ""
+                }`}
+              >
                 <p className="whitespace-pre-wrap break-words">{message.content}</p>
               </div>
             </div>
@@ -233,7 +239,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       <div className="p-4 border-t border-border chat-input-container flex-shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-2 chat-input-form">
           <Textarea
-            placeholder="Describe what you want to build... (e.g., 'Create an NFT contract with minting and SIP-009 compliance')"
+            placeholder="Describe what you want to build... (e.g., 'Create an NFT contract')"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
