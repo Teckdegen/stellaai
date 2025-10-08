@@ -1,6 +1,6 @@
 "use client"
 
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollablePanel } from "@/components/ui/scrollable-panel"
 import { Button } from "@/components/ui/button"
 import { Terminal, Info, AlertCircle, CheckCircle, Trash2, AlertTriangle } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
@@ -42,21 +42,17 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
   // Auto-scroll to bottom when new messages arrive and autoScroll is enabled
   useEffect(() => {
     if (autoScroll && messages.length > 0) {
-      scrollToBottom()
-    }
-  }, [messages, autoScroll])
-
-  const scrollToBottom = () => {
-    if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
-      if (viewport) {
-        // Use requestAnimationFrame for better performance
-        requestAnimationFrame(() => {
-          viewport.scrollTop = viewport.scrollHeight
-        })
+      if (scrollAreaRef.current) {
+        const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
+        if (viewport) {
+          // Use requestAnimationFrame for better performance
+          requestAnimationFrame(() => {
+            viewport.scrollTop = viewport.scrollHeight
+          })
+        }
       }
     }
-  }
+  }, [messages, autoScroll])
 
   const getTimestamp = () => {
     const now = new Date()
@@ -84,7 +80,16 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={scrollToBottom}
+              onClick={() => {
+                if (scrollAreaRef.current) {
+                  const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
+                  if (viewport) {
+                    viewport.scrollTop = viewport.scrollHeight
+                    setAutoScroll(true)
+                    setUserScrolled(false)
+                  }
+                }
+              }}
               className="rounded-full h-8 px-2 text-xs text-white hover:bg-white/10"
             >
               Scroll to bottom
@@ -105,7 +110,7 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
       </div>
 
       {/* Console Output with improved scrolling */}
-      <ScrollArea 
+      <ScrollablePanel 
         className="console-messages-container flex-1 p-4" 
         ref={scrollAreaRef}
         onScroll={handleScroll}
@@ -148,7 +153,7 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
             ))
           )}
         </div>
-      </ScrollArea>
+      </ScrollablePanel>
     </div>
   )
 }

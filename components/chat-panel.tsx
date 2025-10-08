@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollablePanel } from "@/components/ui/scrollable-panel"
 import { Send, Sparkles, Loader2, BookOpen } from "lucide-react"
 import { ChatHistoryManager } from "@/lib/chat-history"
 
@@ -76,10 +76,6 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    scrollToBottom()
-  }, [messages, isLoading])
-
-  const scrollToBottom = () => {
     if (scrollAreaRef.current) {
       const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
       if (viewport) {
@@ -89,7 +85,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
         })
       }
     }
-  }
+  }, [messages, isLoading])
 
   // Extract only text explanations from AI responses (no code in chat)
   useEffect(() => {
@@ -234,7 +230,14 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
           })
 
           // Scroll to bottom as new content arrives
-          scrollToBottom()
+          if (scrollAreaRef.current) {
+            const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
+            if (viewport) {
+              requestAnimationFrame(() => {
+                viewport.scrollTop = viewport.scrollHeight
+              })
+            }
+          }
         }
       }
     } catch (error) {
@@ -250,7 +253,14 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
     } finally {
       setIsLoading(false)
       // Final scroll to bottom
-      setTimeout(() => scrollToBottom(), 100)
+      setTimeout(() => {
+        if (scrollAreaRef.current) {
+          const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
+          if (viewport) {
+            viewport.scrollTop = viewport.scrollHeight
+          }
+        }
+      }, 100)
     }
   }
 
@@ -265,7 +275,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4 chat-messages-container" ref={scrollAreaRef}>
+      <ScrollablePanel className="flex-1 p-4 chat-messages-container" ref={scrollAreaRef}>
         <div className="space-y-4 pr-2">
           {messages.map((message) => (
             <div 
@@ -296,7 +306,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
             </div>
           )}
         </div>
-      </ScrollArea>
+      </ScrollablePanel>
 
       {/* Input - Fixed at bottom */}
       <div className="p-4 border-t border-white/10 chat-input-container flex-shrink-0 bg-black">

@@ -4,7 +4,7 @@ import type React from "react"
 import { Button } from "@/components/ui/button"
 import { FileCode, Copy, Download, Check } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollablePanel } from "@/components/ui/scrollable-panel"
 
 interface CodeEditorProps {
   code: string
@@ -16,6 +16,7 @@ export function CodeEditor({ code, onChange, fileName = "contract.clar" }: CodeE
   const [copied, setCopied] = useState(false)
   const [localCode, setLocalCode] = useState(code)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setLocalCode(code)
@@ -72,7 +73,7 @@ export function CodeEditor({ code, onChange, fileName = "contract.clar" }: CodeE
       </div>
 
       {/* Code Editor */}
-      <ScrollArea className="flex-1 overflow-hidden">
+      <ScrollablePanel className="flex-1 overflow-hidden" ref={scrollAreaRef}>
         {localCode ? (
           <div className="flex h-full">
             {/* Line Numbers */}
@@ -106,7 +107,7 @@ export function CodeEditor({ code, onChange, fileName = "contract.clar" }: CodeE
             </div>
           </div>
         )}
-      </ScrollArea>
+      </ScrollablePanel>
     </div>
   )
 }
