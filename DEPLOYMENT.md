@@ -49,6 +49,31 @@
   - Check the transaction details on the Stacks explorer for more information
   - Validate your code thoroughly before deployment
 
+### "FeeTooLow" Error
+- **Cause**: Transaction fee is below network minimum requirements
+- **Solution**:
+  - Increase the transaction fee manually
+  - Try deploying again (the system may auto-adjust the fee)
+  - Deploy during off-peak hours when fees are lower
+
+### "BadNonce" Error
+- **Cause**: Transaction nonce doesn't match expected value for your address
+- **Solution**:
+  - Wait for pending transactions to complete
+  - Refresh your wallet to sync the latest nonce
+  - Manually set the correct nonce if your wallet supports it
+
+## Enhanced Error Handling
+
+The IDE now provides detailed error information when transactions fail, including:
+
+1. **Clear error titles** that describe what went wrong
+2. **Detailed descriptions** of the error
+3. **Potential causes** to help you understand why the error occurred
+4. **Suggested solutions** to resolve the issue
+
+This enhanced error handling makes it easier to diagnose and fix deployment issues without needing to consult external documentation.
+
 ## Deployment Script Example
 
 If you prefer to deploy manually, here's a Node.js script example:

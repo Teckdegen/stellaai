@@ -30,6 +30,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 - ⚡ **One-Click Deploy**: Deploy directly to Stacks blockchain with private key
 - 💾 **Local Storage**: Projects saved in your browser's local storage
 - 🌐 **Testnet/Mainnet Support**: Deploy to either Stacks Testnet or Mainnet
+- 🚨 **Enhanced Error Handling**: Detailed error messages with causes and solutions for deployment issues
 
 ## Prerequisites
 
@@ -93,7 +94,8 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 ├── lib/                   # Utility functions
 │   ├── clarity-validator.ts # Clarity code validation
 │   ├── project-storage.ts   # Project storage management
-│   └── stacks-wallet.ts     # Stacks private key deployment
+│   ├── stacks-wallet.ts     # Stacks private key deployment
+│   └── transaction-error-handler.ts # Enhanced error handling
 └── public/                # Static assets
 ```
 
@@ -152,6 +154,10 @@ Common deployment errors and their solutions:
 - **"NotEnoughFunds"**: Your wallet doesn't have enough STX for transaction fees
 - **"ContractAlreadyExists"**: A contract with that name already exists for your address
 - **"Transaction aborted during execution"**: The transaction failed during execution; check your code and wallet balance
+- **"FeeTooLow"**: Transaction fee is below network requirements
+- **"BadNonce"**: Transaction nonce doesn't match expected value
+
+The IDE now provides enhanced error handling with detailed causes and solutions for all deployment issues.
 
 ## Security
 

@@ -7,6 +7,7 @@ import {
   StacksTransactionWire,
   TxBroadcastResult
 } from "@stacks/transactions"
+import { handleTransactionError, formatErrorForConsole } from "./transaction-error-handler"
 
 // Remove wallet connect functions and implement private key-based deployment
 export async function deployContractWithPrivateKey(
@@ -16,6 +17,7 @@ export async function deployContractWithPrivateKey(
   privateKey: string,
   onSuccess: (txId: string) => void,
   onError: (error: string) => void,
+  onDetailedError?: (errorInfo: string) => void,
 ): Promise<void> {
   try {
     console.log("[v0] Starting deployment process with private key...")
@@ -25,6 +27,10 @@ export async function deployContractWithPrivateKey(
     try {
       senderAddress = getAddressFromPrivateKey(privateKey, network === "testnet" ? STACKS_TESTNET : STACKS_MAINNET)
     } catch (error) {
+      const errorInfo = handleTransactionError(new Error("Invalid private key provided"))
+      if (onDetailedError) {
+        onDetailedError(formatErrorForConsole(errorInfo))
+      }
       throw new Error("Invalid private key provided")
     }
 
@@ -51,6 +57,11 @@ export async function deployContractWithPrivateKey(
     
     // Check if result is successful or has error
     if ('error' in result) {
+      const errorInfo = handleTransactionError(null, result)
+      if (onDetailedError) {
+        onDetailedError(formatErrorForConsole(errorInfo))
+      }
+      
       // Handle specific error types with better messages
       if (result.reason === 'NotEnoughFunds') {
         throw new Error(`Insufficient STX balance for deployment. Please ensure your wallet has enough STX for transaction fees.`)
@@ -64,12 +75,23 @@ export async function deployContractWithPrivateKey(
     }
     
     if (!result.txid) {
+      const errorInfo = handleTransactionError(new Error("No transaction ID returned from broadcast"))
+      if (onDetailedError) {
+        onDetailedError(formatErrorForConsole(errorInfo))
+      }
       throw new Error("No transaction ID returned from broadcast")
     }
 
     onSuccess(result.txid)
   } catch (error) {
     console.error("[v0] Deployment error:", error)
+    // If we haven't already provided detailed error info, do it now
+    if (error instanceof Error) {
+      const errorInfo = handleTransactionError(error)
+      if (onDetailedError) {
+        onDetailedError(formatErrorForConsole(errorInfo))
+      }
+    }
     onError(error instanceof Error ? error.message : "Unknown deployment error")
   }
 }

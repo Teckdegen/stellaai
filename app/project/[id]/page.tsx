@@ -239,6 +239,28 @@ export default function ProjectPage() {
         ])
         setIsDeploying(false)
       },
+      (detailedError: string) => {
+        const errorTimestamp = new Date().toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+        // Split the detailed error into multiple lines for better readability
+        const errorLines = detailedError.split('\n').filter(line => line.trim() !== '');
+        errorLines.forEach(line => {
+          setConsoleMessages((prev) => [
+            ...prev,
+            { 
+              type: line.startsWith('❌') ? "error" : 
+                   line.includes('Potential Causes:') || line.includes('Suggested Solutions:') ? "info" : 
+                   "warning",
+              message: line,
+              timestamp: errorTimestamp
+            },
+          ])
+        })
+      }
     )
   }
 
