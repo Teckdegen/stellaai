@@ -23,18 +23,19 @@ interface ChatPanelProps {
   network: string
 }
 
-// Mock codebase context - in a real implementation, this would be dynamically generated
+// Enhanced codebase context with more detailed information
 const getCodebaseContext = () => {
-  return `Project Structure:
-- app/page.tsx: Landing page with project creation
-- app/project/[id]/page.tsx: Main IDE interface
-- components/chat-panel.tsx: AI chat interface
-- components/code-editor.tsx: Code editor component
-- components/console-panel.tsx: Console/output panel
-- lib/stacks-wallet.ts: Stacks blockchain integration
-- lib/clarity-validator.ts: Clarity code validation
-- lib/project-storage.ts: Project persistence
-- lib/chat-history.ts: Chat history management
+  return `Project Structure and Components:
+- app/page.tsx: Landing page with project creation functionality
+- app/project/[id]/page.tsx: Main IDE interface with resizable panels
+- components/chat-panel.tsx: AI chat interface with message handling
+- components/code-editor.tsx: Code editor with line numbers and syntax highlighting
+- components/console-panel.tsx: Console output panel for logs and errors
+- components/ui/: Radix UI components for the interface
+- lib/stacks-wallet.ts: Stacks blockchain integration for contract deployment
+- lib/clarity-validator.ts: Clarity code syntax validation and error checking
+- lib/project-storage.ts: Project persistence using localStorage
+- lib/chat-history.ts: Chat history management and code versioning
 
 Key Technologies:
 - Next.js 15 with React Server Components
@@ -43,13 +44,24 @@ Key Technologies:
 - Radix UI for accessible components
 - Stacks blockchain for smart contract deployment
 - Groq Llama 3.3 70b for AI assistance
+- react-resizable-panels for layout management
 
 Core Features:
 - AI-powered Clarity code generation
-- Real-time syntax validation
-- Private key-based deployment
+- Real-time syntax validation with detailed error reporting
+- Private key-based deployment to Stacks testnet/mainnet
 - Project management and persistence
-- Chat history with code versioning`
+- Chat history with code versioning
+- Responsive design with mobile support
+
+Code Analysis Capabilities:
+- Can explain any part of the existing codebase in detail
+- Can identify patterns, best practices, and potential improvements
+- Can analyze security considerations and SIP compliance
+- Can explain how different components work together
+- Can suggest optimizations and debugging approaches
+
+When asked about the codebase, provide specific references to files and components.`
 }
 
 export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, network }: ChatPanelProps) {
@@ -66,7 +78,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       {
         id: "welcome",
         role: "assistant",
-        content: `Hello! I'm Clarity AI, your smart contract assistant.\n\nI can help you build secure Stacks blockchain smart contracts. Just describe what you want to build, and I'll generate the code for you.\n\nExamples:\n- "Create an NFT contract"\n- "Add staking functionality"\n- "Create a token contract"\n\nYou can also ask me to explain any part of the codebase.`,
+        content: `Hello! I'm Clarity AI, your smart contract assistant.\n\nI can help you build secure Stacks blockchain smart contracts. Just describe what you want to build, and I'll generate the code for you.\n\nExamples:\n- "Create an NFT contract"\n- "Add staking functionality"\n- "Create a token contract"\n\nYou can also ask me to explain any part of the codebase or analyze your existing code.`,
       },
     ]
   })

@@ -20,7 +20,13 @@ For example, if creating an NFT contract, use:
 (define-non-fungible-token ${contractName}-nft uint)
 or similar patterns that incorporate the contract name.
 
-You can generate up to 2000 lines of code if needed. Focus on creating complete, well-structured, and secure smart contracts.`;
+You can generate up to 2000 lines of code if needed. Focus on creating complete, well-structured, and secure smart contracts.
+
+When analyzing existing code:
+- Provide detailed explanations of functions, variables, and design patterns
+- Identify potential improvements or security issues
+- Explain the purpose of different sections
+- Point out best practices and SIP compliance`;
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -56,6 +62,15 @@ When explaining code:
 - Point out key patterns and design decisions
 - Explain the purpose of different functions and variables
 - Highlight any security considerations or best practices
+- Reference specific lines of code when relevant
+- Explain how different parts of the contract interact
+- Identify potential improvements or optimizations
+
+When analyzing the codebase:
+- You have access to the full project structure and component information
+- You can explain how different files work together
+- You can identify patterns and best practices used in the codebase
+- You can suggest improvements based on the existing architecture
 
 Format your responses clearly with appropriate sections when needed.`,
           },

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { Button } from "@/components/ui/button"
-import { FileCode, Copy, Download, Check } from "lucide-react"
+import { FileCode, Copy, Download, Check, Search, Settings, Eye, EyeOff } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { ScrollablePanel } from "@/components/ui/scrollable-panel"
 
@@ -17,6 +17,8 @@ export function CodeEditor({ code, onChange, fileName = "contract.clar" }: CodeE
   const [localCode, setLocalCode] = useState(code)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const [showLineNumbers, setShowLineNumbers] = useState(true)
+  const [wordWrap, setWordWrap] = useState(true)
 
   useEffect(() => {
     setLocalCode(code)
@@ -51,37 +53,53 @@ export function CodeEditor({ code, onChange, fileName = "contract.clar" }: CodeE
 
   return (
     <div className="h-full flex flex-col bg-[#1e1e1e]">
-      {/* Header */}
+      {/* Header with enhanced controls */}
       <div className="px-4 py-2 border-b border-border flex items-center justify-between bg-[#252526]">
         <div className="flex items-center gap-2">
           <FileCode className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">contracts/{fileName}</span>
           <span className="text-xs text-primary">Editable</span>
         </div>
-        {localCode && (
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={handleCopy}>
-              {copied ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
-              {copied ? "Copied" : "Copy"}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleDownload}>
-              <Download className="w-3 h-3 mr-1" />
-              Download
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowLineNumbers(!showLineNumbers)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            {showLineNumbers ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setWordWrap(!wordWrap)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Settings className="w-3 h-3" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleCopy}>
+            {copied ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleDownload}>
+            <Download className="w-3 h-3 mr-1" />
+            Download
+          </Button>
+        </div>
       </div>
 
-      {/* Code Editor */}
+      {/* Code Editor with enhanced features */}
       <ScrollablePanel className="flex-1 overflow-hidden" ref={scrollAreaRef}>
         {localCode ? (
           <div className="flex h-full">
             {/* Line Numbers */}
-            <div className="select-none bg-[#1e1e1e] text-[#858585] text-right pr-4 pl-4 py-4 font-mono text-sm leading-6 border-r border-[#2d2d2d] overflow-hidden">
-              {Array.from({ length: lineCount }, (_, i) => (
-                <div key={i}>{i + 1}</div>
-              ))}
-            </div>
+            {showLineNumbers && (
+              <div className="select-none bg-[#1e1e1e] text-[#858585] text-right pr-4 pl-4 py-4 font-mono text-sm leading-6 border-r border-[#2d2d2d] overflow-hidden">
+                {Array.from({ length: lineCount }, (_, i) => (
+                  <div key={i} className="min-w-[30px]">{i + 1}</div>
+                ))}
+              </div>
+            )}
 
             {/* Editable Code Area */}
             <div className="flex-1 relative">
@@ -89,7 +107,9 @@ export function CodeEditor({ code, onChange, fileName = "contract.clar" }: CodeE
                 ref={textareaRef}
                 value={localCode}
                 onChange={handleChange}
-                className="absolute inset-0 w-full h-full p-4 bg-transparent text-foreground font-mono text-sm leading-6 resize-none outline-none"
+                className={`absolute inset-0 w-full h-full p-4 bg-transparent text-foreground font-mono text-sm leading-6 resize-none outline-none ${
+                  wordWrap ? "whitespace-pre-wrap" : "whitespace-pre"
+                }`}
                 style={{
                   caretColor: "#10b981",
                   tabSize: 2,
