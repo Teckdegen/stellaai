@@ -335,9 +335,9 @@ export default function ProjectPage() {
         <PanelGroup direction="horizontal" className="flex-1 overflow-hidden">
           {/* Chat Panel - Desktop only */}
           <Panel 
-            defaultSize={22} 
-            minSize={15} 
-            maxSize={35}
+            defaultSize={30} 
+            minSize={25} 
+            maxSize={40}
             className="hidden lg:block border-r border-white/10 bg-black"
           >
             <div className="h-full">
@@ -354,7 +354,7 @@ export default function ProjectPage() {
           <PanelResizeHandle className="w-2 bg-white/10 hover:bg-white/20 transition-colors cursor-col-resize" />
           
           {/* Editor and Console - Flexible area */}
-          <Panel defaultSize={78} minSize={65} className="flex flex-col overflow-hidden">
+          <Panel defaultSize={70} minSize={60} className="flex flex-col overflow-hidden">
             <PanelGroup direction="vertical" className="flex-1 overflow-hidden">
               {/* Code Editor - Takes most space */}
               <Panel 
