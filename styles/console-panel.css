@@ -44,7 +44,7 @@
   font-family: monospace;
 }
 
-.console-message {
+.console-message-icon {
   flex-shrink: 0;
   margin-top: 0.125rem;
 }
@@ -80,6 +80,7 @@
   color: hsl(var(--muted-foreground));
   height: 100%;
   text-align: center;
+  padding: 1rem;
 }
 
 /* Scrollbar styling for console */
@@ -98,4 +99,15 @@
 
 .console-messages-container::-webkit-scrollbar-thumb:hover {
   background-color: hsl(var(--muted-foreground));
+}
+
+/* Ensure proper scrolling on all devices */
+.console-messages-container {
+  -webkit-overflow-scrolling: touch;
+}
+
+.console-messages-container > div {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }

@@ -3,7 +3,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Terminal, Info, AlertCircle, CheckCircle, Trash2, AlertTriangle } from "lucide-react"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 interface ConsoleMessage {
   type: "info" | "error" | "success" | "warning"
@@ -19,16 +19,31 @@ interface ConsolePanelProps {
 export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
+  const [autoScroll, setAutoScroll] = useState(true)
+  const [userScrolled, setUserScrolled] = useState(false)
 
-  useEffect(() => {
+  // Handle scroll events to determine if user has scrolled up
+  const handleScroll = () => {
     if (viewportRef.current) {
-      // Smooth scroll to bottom
-      viewportRef.current.scrollTo({
-        top: viewportRef.current.scrollHeight,
-        behavior: 'smooth'
-      })
+      const { scrollTop, scrollHeight, clientHeight } = viewportRef.current
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5 // 5px tolerance
+      
+      if (isAtBottom) {
+        setAutoScroll(true)
+        setUserScrolled(false)
+      } else {
+        setAutoScroll(false)
+        setUserScrolled(true)
+      }
     }
-  }, [messages])
+  }
+
+  // Auto-scroll to bottom when new messages arrive and autoScroll is enabled
+  useEffect(() => {
+    if (autoScroll && viewportRef.current) {
+      viewportRef.current.scrollTop = viewportRef.current.scrollHeight
+    }
+  }, [messages, autoScroll])
 
   const getTimestamp = () => {
     const now = new Date()
@@ -51,16 +66,38 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
             {messages.length} {messages.length === 1 ? "message" : "messages"}
           </span>
         </div>
-        {messages.length > 0 && onClear && (
-          <Button variant="ghost" size="sm" onClick={onClear} className="rounded-full h-8 px-2">
-            <Trash2 className="w-3 h-3 mr-1" />
-            Clear
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {userScrolled && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                setAutoScroll(true)
+                setUserScrolled(false)
+                if (viewportRef.current) {
+                  viewportRef.current.scrollTop = viewportRef.current.scrollHeight
+                }
+              }}
+              className="rounded-full h-8 px-2 text-xs"
+            >
+              Scroll to bottom
+            </Button>
+          )}
+          {messages.length > 0 && onClear && (
+            <Button variant="ghost" size="sm" onClick={onClear} className="rounded-full h-8 px-2">
+              <Trash2 className="w-3 h-3 mr-1" />
+              Clear
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Console Output with improved scrolling */}
-      <ScrollArea className="console-messages-container flex-1 p-4" ref={scrollRef}>
+      <ScrollArea 
+        className="console-messages-container flex-1 p-4" 
+        ref={scrollRef}
+        onScroll={handleScroll}
+      >
         <div 
           ref={viewportRef}
           className="space-y-2 font-mono text-xs"
