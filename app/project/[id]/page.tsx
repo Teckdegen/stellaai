@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Play, Home, Loader2, ExternalLink, Menu } from "lucide-react"
 import { ChatPanel } from "@/components/chat-panel"
 import { CodeEditor } from "@/components/code-editor"
 import { ConsolePanel } from "@/components/console-panel"
 import { validateClarityCode } from "@/lib/clarity-validator"
 import { ProjectStorage, type Project } from "@/lib/project-storage"
-import { WalletButton } from "@/components/wallet-button"
-import { deployContract, isWalletConnected } from "@/lib/stacks-wallet"
+import { deployContractWithPrivateKey } from "@/lib/stacks-wallet"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import Image from "next/image"
@@ -21,11 +21,13 @@ export default function ProjectPage() {
   const [project, setProject] = useState<Project | null>(null)
   const [clarCode, setClarCode] = useState("")
   const [consoleMessages, setConsoleMessages] = useState<
-    Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>
+    Array<{ type: "info" | "error" | "success"; message: string; timestamp: string }>
   >([])
   const [isDeploying, setIsDeploying] = useState(false)
   const [deployedTxId, setDeployedTxId] = useState<string | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showPrivateKeyDialog, setShowPrivateKeyDialog] = useState(false)
+  const [privateKey, setPrivateKey] = useState("")
 
   useEffect(() => {
     const projectId = params.id as string
@@ -93,7 +95,7 @@ export default function ProjectPage() {
         setConsoleMessages((prev) => [
           ...prev,
           {
-            type: "warning",
+            type: "info",
             message: `Warning Line ${warning.line}: ${warning.message}`,
             timestamp,
           },
@@ -144,14 +146,6 @@ export default function ProjectPage() {
       second: "2-digit",
     })
 
-    if (!isWalletConnected()) {
-      setConsoleMessages((prev) => [
-        ...prev,
-        { type: "error", message: "⚠ Please connect your Stacks wallet first", timestamp },
-      ])
-      return
-    }
-
     const validation = validateClarityCode(clarCode)
     if (!validation.isValid) {
       setConsoleMessages((prev) => [
@@ -165,7 +159,7 @@ export default function ProjectPage() {
     if (validation.warnings.length > 0) {
       setConsoleMessages((prev) => [
         ...prev,
-        { type: "warning", message: `⚠ Code has ${validation.warnings.length} warning(s). Review before deploying.`, timestamp },
+        { type: "info", message: `⚠ Code has ${validation.warnings.length} warning(s). Review before deploying.`, timestamp },
       ])
     }
 
@@ -178,7 +172,22 @@ export default function ProjectPage() {
       return
     }
 
+    // Show private key dialog
+    setShowPrivateKeyDialog(true)
+  }
+
+  const handleDeployWithPrivateKey = async () => {
+    if (!project) return
+
+    const timestamp = new Date().toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+
     setIsDeploying(true)
+    setShowPrivateKeyDialog(false)
     setConsoleMessages((prev) => [
       ...prev,
       { type: "info", message: "🚀 Initiating deployment to Stacks blockchain...", timestamp },
@@ -189,11 +198,12 @@ export default function ProjectPage() {
     const contractName = project.contractName || "unnamed-contract"
     const network = project.network || "testnet"
 
-    await deployContract(
+    await deployContractWithPrivateKey(
       contractName,
       clarCode,
       network,
-      (txId) => {
+      privateKey,
+      (txId: string) => {
         const successTimestamp = new Date().toLocaleTimeString("en-US", {
           hour12: false,
           hour: "2-digit",
@@ -212,8 +222,9 @@ export default function ProjectPage() {
         ])
         setDeployedTxId(txId)
         setIsDeploying(false)
+        setPrivateKey("") // Clear private key after deployment
       },
-      (error) => {
+      (error: string) => {
         const errorTimestamp = new Date().toLocaleTimeString("en-US", {
           hour12: false,
           hour: "2-digit",
@@ -282,7 +293,6 @@ export default function ProjectPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <WalletButton />
           <Button
             size="sm"
             onClick={handleDeploy}
@@ -333,6 +343,39 @@ export default function ProjectPage() {
           </div>
         </div>
       </div>
+
+      {/* Private Key Dialog */}
+      <Dialog open={showPrivateKeyDialog} onOpenChange={setShowPrivateKeyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>🔐 Enter Private Key</DialogTitle>
+            <DialogDescription>
+              Enter your Stacks private key to deploy the contract. Your private key is never stored or transmitted.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="privateKey" className="text-sm font-medium">Private Key</label>
+              <Input
+                id="privateKey"
+                type="password"
+                value={privateKey}
+                onChange={(e) => setPrivateKey(e.target.value)}
+                placeholder="Enter your Stacks private key"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowPrivateKeyDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleDeployWithPrivateKey} disabled={!privateKey.trim()}>
+                Deploy
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Deployment Success Dialog */}
       <Dialog open={!!deployedTxId} onOpenChange={() => setDeployedTxId(null)}>

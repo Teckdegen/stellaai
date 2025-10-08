@@ -1,191 +1,69 @@
-import { AppConfig, UserSession, showConnect, openContractDeploy } from "@stacks/connect"
 import { STACKS_TESTNET, STACKS_MAINNET } from "@stacks/network"
-
-const appConfig = new AppConfig(["store_write", "publish_data"])
-export const userSession = new UserSession({ appConfig })
-
-// Initialize userSession if not already initialized
-if (typeof window !== 'undefined') {
-  try {
-    userSession.loadUserData()
-  } catch (error) {
-    console.log("[v0] User session not initialized yet")
-  }
-}
+import {
+  makeContractDeploy,
+  broadcastTransaction,
+  getAddressFromPrivateKey,
+  privateKeyToHex,
+  StacksTransactionWire,
+  TxBroadcastResult
+} from "@stacks/transactions"
 
 export interface WalletData {
   address: string
   network: "testnet" | "mainnet"
 }
 
-export function connectWallet(onFinish: (data: WalletData) => void, onCancel: () => void) {
-  console.log("[v0] Initiating wallet connection...")
-
-  // Create a new user session for this connection attempt
-  const appConfig = new AppConfig(["store_write", "publish_data"])
-  const session = new UserSession({ appConfig })
-
-  try {
-    showConnect({
-      appDetails: {
-        name: "Stella AI - Clarity Smart Contract Editor",
-        icon: typeof window !== "undefined" ? window.location.origin + "/stella-icon.png" : "",
-      },
-      onFinish: (payload: any) => {
-        console.log("[v0] Wallet connected successfully", payload)
-        try {
-          const userData = session.loadUserData()
-          // Determine the appropriate network based on the user data
-          const testnetAddress = userData?.profile?.stxAddress?.testnet
-          const mainnetAddress = userData?.profile?.stxAddress?.mainnet
-          const address = testnetAddress || mainnetAddress || ""
-          // Default to testnet, but this should be determined by the project context
-          onFinish({
-            address,
-            network: "testnet", // This will be updated by the project page
-          })
-          if (typeof window !== "undefined") {
-            localStorage.setItem("walletConnected", "true")
-            localStorage.setItem("walletAddress", address)
-          }
-        } catch (error) {
-          console.error("[v0] Error processing wallet connection:", error)
-          onCancel()
-        }
-      },
-      onCancel: () => {
-        console.log("[v0] Wallet connection cancelled")
-        onCancel()
-      },
-      userSession: session,
-    })
-  } catch (error) {
-    console.error("[v0] Error initiating wallet connection:", error)
-    onCancel()
-  }
-}
-
-export function disconnectWallet() {
-  console.log("[v0] Disconnecting wallet...")
-  try {
-    // Create a new session for sign out
-    const appConfig = new AppConfig(["store_write", "publish_data"])
-    const session = new UserSession({ appConfig })
-    session.signUserOut()
-  } catch (error) {
-    console.error("[v0] Error during sign out:", error)
-  }
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("walletConnected")
-    localStorage.removeItem("walletAddress")
-    window.location.reload()
-  }
-}
-
-export function isWalletConnected(): boolean {
-  try {
-    // Create a new session to check connection status
-    const appConfig = new AppConfig(["store_write", "publish_data"])
-    const session = new UserSession({ appConfig })
-    
-    // Check if session exists and has the isUserSignedIn method
-    const sessionConnected = session && typeof session.isUserSignedIn === 'function' ? session.isUserSignedIn() : false
-    const localStorageConnected = typeof window !== "undefined" && localStorage.getItem("walletConnected") === "true"
-    return sessionConnected || localStorageConnected
-  } catch (error) {
-    console.error("[v0] Error checking wallet connection:", error)
-    return false
-  }
-}
-
-export function getWalletAddress(): string | null {
-  if (!isWalletConnected()) return null
-
-  try {
-    // Create a new session to get wallet address
-    const appConfig = new AppConfig(["store_write", "publish_data"])
-    const session = new UserSession({ appConfig })
-    
-    const userData = session.loadUserData()
-    // Check if userData and profile exist
-    if (!userData || !userData.profile) {
-      throw new Error("User data not available")
-    }
-    return userData.profile.stxAddress?.testnet || userData.profile.stxAddress?.mainnet || null
-  } catch (error) {
-    console.error("[v0] Error getting wallet address:", error)
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("walletAddress")
-    }
-    return null
-  }
-}
-
-export async function deployContract(
+// Remove wallet connect functions and implement private key-based deployment
+export async function deployContractWithPrivateKey(
   contractName: string,
   codeBody: string,
   network: "testnet" | "mainnet",
+  privateKey: string,
   onSuccess: (txId: string) => void,
   onError: (error: string) => void,
 ): Promise<void> {
   try {
-    console.log("[v0] Starting deployment process...")
+    console.log("[v0] Starting deployment process with private key...")
 
-    if (!isWalletConnected()) {
-      throw new Error("Wallet not connected")
+    // Validate private key by trying to get an address from it
+    let senderAddress: string
+    try {
+      senderAddress = getAddressFromPrivateKey(privateKey, network === "testnet" ? STACKS_TESTNET : STACKS_MAINNET)
+    } catch (error) {
+      throw new Error("Invalid private key provided")
     }
 
-    // Create a new session for deployment
-    const appConfig = new AppConfig(["store_write", "publish_data"])
-    const session = new UserSession({ appConfig })
-    
-    const userData = session.loadUserData()
-    
-    // Check if userData and profile exist
-    if (!userData || !userData.profile || !userData.profile.stxAddress) {
-      throw new Error("User data not available")
-    }
-    
-    const senderAddress =
-      network === "testnet" ? userData.profile.stxAddress.testnet : userData.profile.stxAddress.mainnet
-
-    console.log("[v0] Sender address:", senderAddress)
-
-    const stacksNetwork =
-      network === "testnet"
-        ? STACKS_TESTNET
-        : STACKS_MAINNET
+    const stacksNetwork = network === "testnet" ? STACKS_TESTNET : STACKS_MAINNET
 
     // Ensure contractName is valid
     const cleanContractName = contractName?.replace(/[^a-zA-Z0-9-]/g, "-")?.toLowerCase() || "contract"
 
     console.log("[v0] Deploying contract:", cleanContractName, "to", network)
 
-    // Use the wallet-based deployment approach with openContractDeploy
-    openContractDeploy({
+    // Create the contract deployment transaction
+    const transaction: StacksTransactionWire = await makeContractDeploy({
       contractName: cleanContractName,
       codeBody: codeBody || "",
+      senderKey: privateKey,
       network: stacksNetwork,
-      onFinish: (data: any) => {
-        try {
-          console.log("[v0] Deployment finished:", data)
-          
-          if (data?.txId) {
-            onSuccess(data.txId)
-          } else {
-            throw new Error("No transaction ID returned")
-          }
-        } catch (error) {
-          console.error("[v0] Deployment success handling error:", error)
-          onError(error instanceof Error ? error.message : "Failed to process deployment result")
-        }
-      },
-      onCancel: () => {
-        console.log("[v0] Deployment cancelled by user")
-        onError("Deployment cancelled")
-      },
-      userSession: session,
     })
+
+    // Broadcast the transaction
+    const result: TxBroadcastResult = await broadcastTransaction({
+      transaction: transaction,
+      network: stacksNetwork
+    })
+    
+    // Check if result is successful or has error
+    if ('error' in result) {
+      throw new Error(`Transaction broadcast failed: ${result.reason} - ${result.error}`)
+    }
+    
+    if (!result.txid) {
+      throw new Error("No transaction ID returned from broadcast")
+    }
+
+    onSuccess(result.txid)
   } catch (error) {
     console.error("[v0] Deployment error:", error)
     onError(error instanceof Error ? error.message : "Unknown deployment error")

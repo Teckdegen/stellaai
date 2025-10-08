@@ -7,9 +7,8 @@ Stella AI is the world's most advanced AI-powered development environment for cr
 This project requires a Groq API key to function. You need to add your API key directly to the source code:
 
 1. Get your free Groq API key at https://console.groq.com
-2. Add it to these files:
+2. Add it to this file:
    - `app/api/chat/route.ts`
-   - `lib/groq-client.ts`
 
 Look for the line `const GROQ_API_KEY = "your-groq-api-key-here";` and replace it with your actual key.
 
@@ -19,7 +18,7 @@ Stella AI follows a simple but powerful workflow:
 1. **Describe** your contract requirements in plain English
 2. **Generate** complete, standards-compliant Clarity code with AI
 3. **Validate** the code with built-in security and best practice checks
-4. **Deploy** directly to Stacks blockchain with wallet integration
+4. **Deploy** directly to Stacks blockchain with private key
 
 The AI generates a **single Clarity file** (.clar) that contains your entire contract - no external dependencies, no complex setups. This single file is what gets deployed to the Stacks blockchain.
 
@@ -28,7 +27,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 - 🤖 **AI-Powered Generation**: Describe your contract in plain English and let Stella generate Clarity code using the real Groq API
 - ✅ **Built-in Validation**: Automatic syntax checking and error detection before deployment
 - 🛠️ **AI-Assisted Fixes**: Get suggestions for fixing common Clarity code issues
-- ⚡ **One-Click Deploy**: Deploy directly to Stacks blockchain with wallet integration
+- ⚡ **One-Click Deploy**: Deploy directly to Stacks blockchain with private key
 - 💾 **Local Storage**: Projects saved in your browser's local storage
 - 🌐 **Testnet/Mainnet Support**: Deploy to either Stacks Testnet or Mainnet
 
@@ -36,7 +35,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 
 - Node.js 18+ installed
 - A Groq API key (get one at https://console.groq.com)
-- A Stacks wallet (e.g., Hiro Wallet or Xverse Wallet)
+- A Stacks private key for deployment
 
 ## Getting Started
 
@@ -78,9 +77,9 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
    - You can manually edit the code if needed
 
 4. **Deploy Contract:**
-   - Connect your Stacks wallet
    - Click the "Deploy" button
-   - Confirm the transaction in your wallet
+   - Enter your Stacks private key when prompted
+   - Confirm deployment
 
 ## Project Structure
 
@@ -92,7 +91,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 ├── lib/                   # Utility functions
 │   ├── clarity-validator.ts # Clarity code validation
 │   ├── project-storage.ts   # Project storage management
-│   └── stacks-wallet.ts     # Stacks wallet integration
+│   └── stacks-wallet.ts     # Stacks private key deployment
 └── public/                # Static assets
 ```
 
@@ -129,11 +128,6 @@ npm start
 
 ## Troubleshooting
 
-### Wallet Connection Issues
-- Make sure you have a Stacks wallet installed (Hiro Wallet or Xverse)
-- Ensure you're on the correct network (Testnet/Mainnet)
-- Refresh the page if connection issues persist
-
 ### AI Generation Issues
 - Ensure you have internet connectivity
 - Try rephrasing your request if the AI doesn't understand
@@ -145,7 +139,7 @@ npm start
 - Warnings help improve code quality and security
 
 ### Deployment Issues
-- Verify your wallet has sufficient STX for transaction fees
+- Verify your private key is valid and has sufficient STX for transaction fees
 - Check that your contract name is unique
 - Ensure your code passes validation before deployment
 

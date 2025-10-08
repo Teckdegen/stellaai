@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Code2, Sparkles, Shield, Zap, Clock, Trash2, FolderOpen, Menu } from "lucide-react"
 import { ProjectStorage, type Project } from "@/lib/project-storage"
-import { WalletButton } from "@/components/wallet-button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,7 +82,6 @@ export default function LandingPage() {
             <Button variant="ghost" size="sm">
               Examples
             </Button>
-            <WalletButton />
           </div>
 
           {/* Mobile Navigation */}
@@ -95,7 +93,6 @@ export default function LandingPage() {
             </SheetTrigger>
             <SheetContent>
               <div className="flex flex-col gap-4 mt-8">
-                <WalletButton />
                 <Button variant="ghost" className="justify-start">
                   Documentation
                 </Button>
@@ -272,7 +269,7 @@ export default function LandingPage() {
               </div>
               <h3 className="font-semibold text-lg">One-Click Deploy</h3>
               <p className="text-sm text-muted-foreground">
-                Deploy directly to Stacks blockchain with wallet integration. No command line required.
+                Deploy directly to Stacks blockchain with private key. No wallet required.
               </p>
             </Card>
           </div>

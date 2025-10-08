@@ -1,15 +1,31 @@
-import Groq from "groq-sdk"
+import fetch from "node-fetch"
 
 export const maxDuration = 30
 
-// TODO: Add your Groq API key here
-const GROQ_API_KEY = "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";
+// TODO: Add your Groq API Key (should start with "gsk_")
+const GROQ_API_KEY = "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"
 
-const groq = new Groq({
-  apiKey: GROQ_API_KEY,
-})
+async function callGroq(prompt: string, contractName: string, network: string, currentCode: string) {
+  try {
+    const contextMessage = `Current context:
+- Contract Name: ${contractName}
+- Network: ${network}
+- Current Code: ${currentCode ? "Yes (" + currentCode.length + " chars)" : "None yet"}
 
-const CLARITY_SYSTEM_PROMPT = `You are Stella, the world's most advanced Clarity smart contract developer and AI assistant for the Stacks blockchain. Your expertise encompasses all aspects of Clarity development, security, and best practices.
+User's request: ${prompt}`
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          {
+            role: "system",
+            content: `You are Stella, the world's most advanced Clarity smart contract developer and AI assistant for the Stacks blockchain. Your expertise encompasses all aspects of Clarity development, security, and best practices.
 
 ## YOUR PRIMARY ROLE
 Generate production-ready, secure, and efficient Clarity smart contracts based on user requirements. You are both a code generator and a expert code reviewer.
@@ -99,7 +115,7 @@ Generate production-ready, secure, and efficient Clarity smart contracts based o
 □ Has appropriate read-only query functions
 
 ## RESPONSE FORMATS
-- **Code Generation**: Output ONLY clean Clarity code
+- **Code Generation**: Output ONLY clean Clarity code that can be directly deployed to the Stacks blockchain
 - **Explanations**: Provide clear, concise guidance separately
 - **Error Fixes**: Explain issue, then show corrected code
 - **Questions**: Ask specific, targeted questions about requirements
@@ -111,58 +127,50 @@ Generate production-ready, secure, and efficient Clarity smart contracts based o
 - Respect user's technical level in explanations
 
 Remember: Your code will be deployed to the Stacks blockchain. It must be flawless, secure, and efficient. Take time to think through the implementation carefully before responding.`
+          },
+          {
+            role: "user",
+            content: contextMessage,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 3000,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (data.error) {
+      console.error("❌ Groq API Error:", data.error)
+      return null
+    }
+
+    return data.choices[0].message.content
+  } catch (error) {
+    console.error("🚨 Error calling Groq:", error)
+    return null
+  }
+}
 
 export async function POST(req: Request) {
   try {
     const { messages, contractName, network, currentCode } = await req.json()
 
-    const contextMessage = `Current context:
-- Contract Name: ${contractName}
-- Network: ${network}
-- Current Code: ${currentCode ? "Yes (" + currentCode.length + " chars)" : "None yet"}
-
-User's request:`
-
     const userMessage = messages[messages.length - 1].content
-    const chatHistory = messages.slice(0, -1)
 
-    const completion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: CLARITY_SYSTEM_PROMPT,
-        },
-        ...chatHistory,
-        {
-          role: "user",
-          content: contextMessage + "\n" + userMessage,
-        },
-      ],
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.7,
-      max_tokens: 3000,
-      stream: true,
-    })
+    // Get the AI response
+    const aiResponse = await callGroq(userMessage, contractName, network, currentCode)
 
-    // Create a readable stream from the response
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of completion) {
-            const content = chunk.choices[0]?.delta?.content || ""
-            if (content) {
-              const text = new TextEncoder().encode(content)
-              controller.enqueue(text)
-            }
-          }
-          controller.close()
-        } catch (error) {
-          controller.error(error)
-        }
-      },
-    })
+    if (!aiResponse) {
+      throw new Error("Failed to get response from Groq")
+    }
 
-    return new Response(stream, {
+    // Return the response directly as text
+    return new Response(aiResponse, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
       },

@@ -2,11 +2,11 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
-import { Terminal, Info, AlertCircle, CheckCircle, Trash2 } from "lucide-react"
+import { Terminal, Info, AlertCircle, CheckCircle, Trash2, AlertTriangle } from "lucide-react"
 import { useEffect, useRef } from "react"
 
 interface ConsoleMessage {
-  type: "info" | "error" | "success"
+  type: "info" | "error" | "success" | "warning"
   message: string
   timestamp?: string
 }
@@ -71,13 +71,16 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
                 {msg.type === "info" && <Info className="w-3 h-3 text-[#4FC3F7] mt-0.5 flex-shrink-0" />}
                 {msg.type === "error" && <AlertCircle className="w-3 h-3 text-[#F44336] mt-0.5 flex-shrink-0" />}
                 {msg.type === "success" && <CheckCircle className="w-3 h-3 text-[#4CAF50] mt-0.5 flex-shrink-0" />}
+                {msg.type === "warning" && <AlertTriangle className="w-3 h-3 text-[#FFA726] mt-0.5 flex-shrink-0" />}
                 <span
                   className={
                     msg.type === "error"
                       ? "text-[#F44336]"
                       : msg.type === "success"
                         ? "text-[#4CAF50]"
-                        : "text-[#CCCCCC]"
+                        : msg.type === "warning"
+                          ? "text-[#FFA726]"
+                          : "text-[#CCCCCC]"
                   }
                 >
                   {msg.message}
