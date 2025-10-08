@@ -17,33 +17,45 @@ interface ConsolePanelProps {
 }
 
 export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const viewportRef = useRef<HTMLDivElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [autoScroll, setAutoScroll] = useState(true)
   const [userScrolled, setUserScrolled] = useState(false)
 
   // Handle scroll events to determine if user has scrolled up
-  const handleScroll = () => {
-    if (viewportRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = viewportRef.current
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5 // 5px tolerance
-      
-      if (isAtBottom) {
-        setAutoScroll(true)
-        setUserScrolled(false)
-      } else {
-        setAutoScroll(false)
-        setUserScrolled(true)
-      }
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLDivElement
+    const { scrollTop, scrollHeight, clientHeight } = target
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5 // 5px tolerance
+    
+    if (isAtBottom) {
+      setAutoScroll(true)
+      setUserScrolled(false)
+    } else {
+      setAutoScroll(false)
+      setUserScrolled(true)
     }
   }
 
   // Auto-scroll to bottom when new messages arrive and autoScroll is enabled
   useEffect(() => {
-    if (autoScroll && viewportRef.current) {
-      viewportRef.current.scrollTop = viewportRef.current.scrollHeight
+    if (autoScroll && scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]')
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight
+      }
     }
   }, [messages, autoScroll])
+
+  const scrollToBottom = () => {
+    if (scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]')
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight
+        setAutoScroll(true)
+        setUserScrolled(false)
+      }
+    }
+  }
 
   const getTimestamp = () => {
     const now = new Date()
@@ -71,13 +83,7 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => {
-                setAutoScroll(true)
-                setUserScrolled(false)
-                if (viewportRef.current) {
-                  viewportRef.current.scrollTop = viewportRef.current.scrollHeight
-                }
-              }}
+              onClick={scrollToBottom}
               className="rounded-full h-8 px-2 text-xs"
             >
               Scroll to bottom
@@ -95,13 +101,10 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
       {/* Console Output with improved scrolling */}
       <ScrollArea 
         className="console-messages-container flex-1 p-4" 
-        ref={scrollRef}
+        ref={scrollAreaRef}
         onScroll={handleScroll}
       >
-        <div 
-          ref={viewportRef}
-          className="space-y-2 font-mono text-xs"
-        >
+        <div className="space-y-2 font-mono text-xs">
           {messages.length === 0 ? (
             <div className="console-empty-state h-full flex flex-col items-center justify-center text-muted-foreground">
               <Terminal className="w-8 h-8 mb-2 opacity-50" />

@@ -24,8 +24,7 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, network }: ChatPanelProps) {
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const viewportRef = useRef<HTMLDivElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [messages, setMessages] = useState<Message[]>(() => {
     // Load chat history from localStorage
     const history = ChatHistoryManager.getHistory(projectId)
@@ -52,9 +51,11 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
   }, [messages, isLoading])
 
   const scrollToBottom = () => {
-    if (viewportRef.current) {
-      // Instant scroll to bottom for better responsiveness
-      viewportRef.current.scrollTop = viewportRef.current.scrollHeight
+    if (scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]')
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight
+      }
     }
   }
 
@@ -206,11 +207,8 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4 chat-messages-container" ref={scrollRef}>
-        <div 
-          ref={viewportRef}
-          className="space-y-4 pr-2"
-        >
+      <ScrollArea className="flex-1 p-4 chat-messages-container" ref={scrollAreaRef}>
+        <div className="space-y-4 pr-2">
           {messages.map((message) => (
             <div 
               key={message.id} 
