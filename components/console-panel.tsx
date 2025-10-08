@@ -23,36 +23,34 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
 
   // Handle scroll events to determine if user has scrolled up
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLDivElement
-    const { scrollTop, scrollHeight, clientHeight } = target
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5 // 5px tolerance
-    
-    if (isAtBottom) {
-      setAutoScroll(true)
-      setUserScrolled(false)
-    } else {
-      setAutoScroll(false)
-      setUserScrolled(true)
+    const target = event.currentTarget
+    const viewport = target.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
+    if (viewport) {
+      const { scrollTop, scrollHeight, clientHeight } = viewport
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5 // 5px tolerance
+      
+      if (isAtBottom) {
+        setAutoScroll(true)
+        setUserScrolled(false)
+      } else {
+        setAutoScroll(false)
+        setUserScrolled(true)
+      }
     }
   }
 
   // Auto-scroll to bottom when new messages arrive and autoScroll is enabled
   useEffect(() => {
-    if (autoScroll && scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]')
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight
-      }
+    if (autoScroll) {
+      scrollToBottom()
     }
   }, [messages, autoScroll])
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]')
+      const viewport = scrollAreaRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLDivElement
       if (viewport) {
         viewport.scrollTop = viewport.scrollHeight
-        setAutoScroll(true)
-        setUserScrolled(false)
       }
     }
   }
