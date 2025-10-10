@@ -6,27 +6,8 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollablePanel } from "@/components/ui/scrollable-panel"
-import { Send, Sparkles, Loader2, BookOpen, Bot, Settings } from "lucide-react"
+import { Send, Sparkles, Loader2, BookOpen, Bot } from "lucide-react"
 import { ChatHistoryManager } from "@/lib/chat-history"
-
-// Add this helper function to get AI settings
-const getAISettings = () => {
-  if (typeof window !== 'undefined') {
-    const settings = localStorage.getItem('clarity-ide-settings')
-    if (settings) {
-      try {
-        return JSON.parse(settings)
-      } catch (error) {
-        console.error('Failed to parse AI settings:', error)
-      }
-    }
-  }
-  return {
-    useCustomApi: false,
-    selectedProvider: 'default',
-    apiKeys: {}
-  }
-}
 
 interface Message {
   id: string
@@ -122,6 +103,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [lastProcessedMessage, setLastProcessedMessage] = useState<string>("")
+  const [selectedAI, setSelectedAI] = useState<"groq" | "gemini">("groq")
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -418,32 +400,23 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
 
       // Get codebase context
       const codebaseContext = getCodebaseContext()
-      
-      // Get AI settings
-      const aiSettings = getAISettings()
-      
-      // Prepare request body
-      const requestBody: any = {
-        messages: [...messages, userMessage],
-        contractName,
-        network,
-        currentCode,
-        codebaseContext,
-      }
-      
-      // Add custom provider info if using custom API
-      if (aiSettings.useCustomApi && aiSettings.selectedProvider !== 'default') {
-        requestBody.customProvider = aiSettings.selectedProvider
-        requestBody.apiKey = aiSettings.apiKeys[aiSettings.selectedProvider]
-      }
 
-      // Call the unified chat API
-      const response = await fetch("/api/unified-chat", {
+      // Call the appropriate API based on selected AI
+      const apiEndpoint = selectedAI === "groq" ? "/api/chat" : "/api/gemini"
+      
+      // Call the API
+      const response = await fetch(apiEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+          contractName,
+          network,
+          currentCode,
+          codebaseContext,
+        }),
       })
 
       if (!response.ok) {
@@ -525,20 +498,31 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
             <h2 className="font-semibold text-sm text-white">Clarity AI</h2>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="text-gray-400 hover:text-white hover:bg-white/10"
-              onClick={() => {
-                // Navigate to settings page
-                if (typeof window !== 'undefined') {
-                  window.open('/#settings', '_blank');
-                }
-              }}
-            >
-              <Settings className="w-4 h-4" />
-              <span className="ml-1 hidden sm:inline">Settings</span>
-            </Button>
+            <span className="text-xs text-gray-400">AI:</span>
+            <div className="flex rounded-full bg-white/10 p-1">
+              <button
+                onClick={() => setSelectedAI("groq")}
+                className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full transition-colors ${
+                  selectedAI === "groq" 
+                    ? "bg-white text-black" 
+                    : "text-gray-300 hover:bg-white/10"
+                }`}
+              >
+                <Bot className="w-3 h-3" />
+                Groq
+              </button>
+              <button
+                onClick={() => setSelectedAI("gemini")}
+                className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full transition-colors ${
+                  selectedAI === "gemini" 
+                    ? "bg-white text-black" 
+                    : "text-gray-300 hover:bg-white/10"
+                }`}
+              >
+                <Bot className="w-3 h-3" />
+                Gemini
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -570,7 +554,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span className="text-xs text-gray-400">
-                    AI is thinking...
+                    {selectedAI === "groq" ? "Groq AI is thinking..." : "Gemini AI is thinking..."}
                   </span>
                 </div>
               </div>

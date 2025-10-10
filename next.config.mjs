@@ -9,10 +9,12 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  output: 'standalone',
-  // Ensure proper standalone build configuration
+  // Removed standalone output which causes issues on Windows
+  // output: 'standalone',
+  // Ensure proper build configuration
   experimental: {
-    outputFileTracing: true,
+    // Removed outputFileTracing which causes warnings
+    // outputFileTracing: true,
   },
 }
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,29 +32,50 @@ export default function ProjectPage() {
   const [privateKey, setPrivateKey] = useState("")
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [newContractName, setNewContractName] = useState("")
+  const hasInitialized = useRef(false)
 
   useEffect(() => {
-    const projectId = params.id as string
-    const proj = ProjectStorage.getProject(projectId)
+    // Handle Ethereum wallet conflicts
+    const handleEthereumConflicts = () => {
+      try {
+        // Check if ethereum is already defined and is not writable
+        if (typeof window !== 'undefined' && window.ethereum) {
+          const descriptor = Object.getOwnPropertyDescriptor(window, 'ethereum');
+          if (descriptor && !descriptor.writable && !descriptor.configurable) {
+            console.warn('Ethereum property is not configurable, conflicts may occur');
+          }
+        }
+      } catch (error) {
+        console.warn('Error checking ethereum property:', error);
+      }
+    };
 
-    if (proj) {
-      setProject(proj)
-      setClarCode(proj.clarFile || "")
-      setNewContractName(proj.contractName) // Initialize with current name
+    if (!hasInitialized.current) {
+      handleEthereumConflicts();
+      hasInitialized.current = true;
+      
+      const projectId = params.id as string
+      const proj = ProjectStorage.getProject(projectId)
 
-      const timestamp = new Date().toLocaleTimeString("en-US", {
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      })
-      setConsoleMessages([
-        { type: "info", message: `Project loaded: ${proj.contractName}`, timestamp },
-        { type: "info", message: `Network: ${proj.network}`, timestamp },
-        { type: "success", message: "Clarity AI is ready to help you build!", timestamp },
-      ])
-    } else {
-      router.push("/")
+      if (proj) {
+        setProject(proj)
+        setClarCode(proj.clarFile || "")
+        setNewContractName(proj.contractName) // Initialize with current name
+
+        const timestamp = new Date().toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+        setConsoleMessages([
+          { type: "info", message: `Project loaded: ${proj.contractName}`, timestamp },
+          { type: "info", message: `Network: ${proj.network}`, timestamp },
+          { type: "success", message: "Clarity AI is ready to help you build!", timestamp },
+        ])
+      } else {
+        router.push("/")
+      }
     }
   }, [params.id, router])
 
@@ -80,14 +101,14 @@ export default function ProjectPage() {
 
     // Run validation with the dedicated validation service
     try {
-      const response = await fetch("/api/validate", {
+      const response = await fetch("/api/validate-contract", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           contractCode: newCode,
-          contractName: project?.contractName || "unnamed-contract", // Use updated project name
+          contractName: project?.contractName || "unnamed-contract",
         }),
       })
 
@@ -102,7 +123,7 @@ export default function ProjectPage() {
         // Display validation errors
         setConsoleMessages((prev) => [
           ...prev,
-          { type: "error", message: `Validation failed: ${result.errors}`, timestamp },
+          { type: "error", message: `Validation failed: ${result.errors.join(', ')}`, timestamp },
         ])
       }
     } catch (error) {
@@ -138,14 +159,14 @@ export default function ProjectPage() {
     ])
 
     try {
-      const response = await fetch("/api/validate", {
+      const response = await fetch("/api/validate-contract", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           contractCode: clarCode,
-          contractName: project.contractName, // Use current project name
+          contractName: project.contractName,
         }),
       })
 
@@ -171,23 +192,13 @@ export default function ProjectPage() {
             { type: "info", message: result.output, timestamp: resultTimestamp },
           ])
         }
-        
-        // Show any warnings
-        if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
-          result.errors.forEach((error: { line: number; message: string }) => {
-            setConsoleMessages((prev) => [
-              ...prev,
-              { type: "warning", message: `Line ${error.line}: ${error.message}`, timestamp: resultTimestamp },
-            ])
-          })
-        }
       } else {
-        // Display structured errors
+        // Display errors
         if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
-          result.errors.forEach((error: { line: number; message: string }) => {
+          result.errors.forEach((error: string) => {
             setConsoleMessages((prev) => [
               ...prev,
-              { type: "error", message: `Line ${error.line}: ${error.message}`, timestamp: resultTimestamp },
+              { type: "error", message: error, timestamp: resultTimestamp },
             ])
           })
         } else {
@@ -277,14 +288,14 @@ export default function ProjectPage() {
 
     // Run validation before deployment and show all results
     try {
-      const validationResponse = await fetch("/api/validate", {
+      const validationResponse = await fetch("/api/validate-contract", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           contractCode: clarCode,
-          contractName: contractName, // Use current contract name
+          contractName: contractName,
         }),
       })
 
@@ -310,23 +321,13 @@ export default function ProjectPage() {
             { type: "info", message: validationResult.output, timestamp: validationTimestamp },
           ])
         }
-        
-        // Show any warnings
-        if (validationResult.errors && Array.isArray(validationResult.errors) && validationResult.errors.length > 0) {
-          validationResult.errors.forEach((error: { line: number; message: string }) => {
-            setConsoleMessages((prev) => [
-              ...prev,
-              { type: "warning", message: `Line ${error.line}: ${error.message}`, timestamp: validationTimestamp },
-            ])
-          })
-        }
       } else {
         // Show validation errors
         if (validationResult.errors && Array.isArray(validationResult.errors) && validationResult.errors.length > 0) {
-          validationResult.errors.forEach((error: { line: number; message: string }) => {
+          validationResult.errors.forEach((error: string) => {
             setConsoleMessages((prev) => [
               ...prev,
-              { type: "error", message: `Line ${error.line}: ${error.message}`, timestamp: validationTimestamp },
+              { type: "error", message: error, timestamp: validationTimestamp },
             ])
           })
         } else {
