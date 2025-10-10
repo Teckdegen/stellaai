@@ -32,10 +32,49 @@ Current Project Details:
 - Network: ${network || "testnet"}
 - Current Code: ${currentCode ? `\n\`\`\`clarity\n${currentCode}\n\`\`\`` : "No code yet"}
 
+IMPORTANT STACKS BLOCKCHAIN AND CLARITY STANDARDS:
+1. ALWAYS follow the standardized contract structure with clear section headers
+2. Use proper error handling with descriptive error codes (err-not-found, err-unauthorized, etc.)
+3. Follow naming conventions: kebab-case for functions, snake_case for variables
+4. Include proper access controls using tx-sender validation
+5. Use appropriate data types (uint for counters, principal for addresses, etc.)
+6. Follow the standard contract sections: Constants, Error Codes, Data Variables, Data Maps, Traits, Public Functions, Read-only Functions, Update Functions
+7. Always return (ok ...) or (err ...) from public functions
+8. Use unwrap! with proper error codes instead of unwrap-panic!
+9. Include comprehensive comments explaining complex logic
+10. Reference existing standardized contracts in the /contracts directory for examples
+
+EXAMPLE CONTRACT STRUCTURE TO FOLLOW:
+;; Contract Name
+;; Contract Header
+;; ===============================================
+;; Constants
+;; Error Codes
+;; Data Variables
+;; Data Maps
+;; Traits
+;; Public Functions
+;; ===============================================
+;; Read-only Functions
+;; ===============================================
+;; Update Functions
+;; ===============================================
+
+See the standardized contracts in the /contracts directory for reference:
+- template.clar: Standard contract template
+- sbtc-marketplace.clar: sBTC P2P Marketplace contract
+
+STACKS SPECIFIC BEST PRACTICES:
+1. Use proper SIP (Stacks Improvement Proposal) patterns when relevant
+2. Implement proper state validation before making changes
+3. Use appropriate gas-efficient patterns
+4. Follow security best practices with proper authorization checks
+5. Use standard error codes with HTTP-like status codes (u404, u403, u400)
+
 Instructions:
 1. When asked about the codebase, provide specific, accurate information referencing actual files and components
 2. Focus on writing Clarity code rather than lengthy explanations
-3. Always follow Stacks protocol standards and best practices
+3. ALWAYS follow Stacks protocol standards and best practices
 4. Include functions and events in all contracts, even simple ones
 5. Use proper Clarity syntax with correct indentation
 6. Only send Clarity code to the editor, not chat explanations

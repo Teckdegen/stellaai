@@ -63,7 +63,23 @@ Code Analysis Capabilities:
 - Can explain how different components work together
 - Can suggest optimizations and debugging approaches
 
-When asked about the codebase, provide specific references to files and components.`
+Stacks Blockchain Standards and Best Practices:
+- All contracts follow standardized structure with clear section headers
+- Proper error handling with descriptive error codes
+- Naming conventions: kebab-case for functions, snake_case for variables
+- Access controls using tx-sender validation
+- Appropriate data types (uint for counters, principal for addresses, etc.)
+- Standard contract sections: Constants, Error Codes, Data Variables, Data Maps, Traits, Public Functions, Read-only Functions, Update Functions
+- Always return (ok ...) or (err ...) from public functions
+- Use unwrap! with proper error codes instead of unwrap-panic!
+- Comprehensive comments explaining complex logic
+
+Reference Standardized Contracts:
+- contracts/template.clar: Standard contract template following all Stacks standards
+- contracts/sbtc-marketplace.clar: sBTC P2P Marketplace contract following all Stacks standards
+- contracts/STACKS_STANDARDS_GUIDE.md: Comprehensive guide to Stacks blockchain and Clarity standards
+
+When asked about the codebase, provide specific references to files and components. When generating Clarity code, ALWAYS follow the patterns in the standardized contracts and the STACKS_STANDARDS_GUIDE.md.`
 }
 
 export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, network }: ChatPanelProps) {

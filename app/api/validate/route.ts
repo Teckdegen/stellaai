@@ -112,14 +112,36 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
           const lines = output.split('\n');
           
           for (const line of lines) {
-            if (line.includes("error:") || line.includes("warning:")) {
-              // Extract line number and message if possible
-              const lineMatch = line.match(/:(\d+):/);
-              const lineNum = lineMatch && lineMatch[1] ? parseInt(lineMatch[1]) : 1;
-              const message = line.replace(/.*(?:error|warning):\s*/i, '').trim();
-              // Only add non-empty messages
-              if (message) {
-                errors.push({ line: lineNum || 1, message });
+            // Skip empty lines
+            if (!line.trim()) continue;
+            
+            // Look for error patterns in Clarinet output
+            if (line.includes("error:") || line.includes("Error:") || line.includes("failed:") || line.includes("Error")) {
+              // Extract file, line, and column information from Clarinet output
+              // Pattern: file:line:column: error: message
+              const locationMatch = line.match(/[^:]+:(\d+):(\d+):\s*(.*)/);
+              if (locationMatch) {
+                const lineNum = parseInt(locationMatch[1]) || 1;
+                const message = locationMatch[3] ? locationMatch[3].trim() : line.trim();
+                errors.push({ line: lineNum, message });
+              } else {
+                // Fallback: try to extract line number from any number in the line
+                const lineMatch = line.match(/(\d+)/);
+                const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
+                errors.push({ line: lineNum, message: line.trim() });
+              }
+            }
+            // Also capture warnings
+            else if (line.includes("warning:") || line.includes("Warning:")) {
+              const locationMatch = line.match(/[^:]+:(\d+):(\d+):\s*(.*)/);
+              if (locationMatch) {
+                const lineNum = parseInt(locationMatch[1]) || 1;
+                const message = locationMatch[3] ? locationMatch[3].trim() : line.trim();
+                errors.push({ line: lineNum, message: `Warning: ${message}` });
+              } else {
+                const lineMatch = line.match(/(\d+)/);
+                const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
+                errors.push({ line: lineNum, message: `Warning: ${line.trim()}` });
               }
             }
           }
@@ -146,14 +168,36 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
         if (output) {
           const lines = output.split('\n');
           for (const line of lines) {
-            if (line.includes("error:") || line.includes("Error:")) {
-              // Extract line number and message if possible
-              const lineMatch = line.match(/:(\d+):/);
-              const lineNum = lineMatch && lineMatch[1] ? parseInt(lineMatch[1]) : 1;
-              const message = line.replace(/.*error:\s*/i, '').trim();
-              // Only add non-empty messages
-              if (message) {
-                errors.push({ line: lineNum || 1, message });
+            // Skip empty lines
+            if (!line.trim()) continue;
+            
+            // Look for error patterns in Clarinet output
+            if (line.includes("error:") || line.includes("Error:") || line.includes("failed:") || line.includes("Error")) {
+              // Extract file, line, and column information from Clarinet output
+              // Pattern: file:line:column: error: message
+              const locationMatch = line.match(/[^:]+:(\d+):(\d+):\s*(.*)/);
+              if (locationMatch) {
+                const lineNum = parseInt(locationMatch[1]) || 1;
+                const message = locationMatch[3] ? locationMatch[3].trim() : line.trim();
+                errors.push({ line: lineNum, message });
+              } else {
+                // Fallback: try to extract line number from any number in the line
+                const lineMatch = line.match(/(\d+)/);
+                const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
+                errors.push({ line: lineNum, message: line.trim() });
+              }
+            }
+            // Also capture warnings
+            else if (line.includes("warning:") || line.includes("Warning:")) {
+              const locationMatch = line.match(/[^:]+:(\d+):(\d+):\s*(.*)/);
+              if (locationMatch) {
+                const lineNum = parseInt(locationMatch[1]) || 1;
+                const message = locationMatch[3] ? locationMatch[3].trim() : line.trim();
+                errors.push({ line: lineNum, message: `Warning: ${message}` });
+              } else {
+                const lineMatch = line.match(/(\d+)/);
+                const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
+                errors.push({ line: lineNum, message: `Warning: ${line.trim()}` });
               }
             }
           }
