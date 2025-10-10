@@ -1,32 +1,24 @@
 import { NextRequest } from "next/server";
-import { validateWithClarinet, validateProjectWithClarinet } from "@/lib/clarinet-validator";
 
 export async function POST(req: NextRequest) {
   try {
+    // Forward the request to our dedicated validation service
     const body = await req.json();
-    const { contractCode, contractName, projectPath } = body;
-
-    console.log("Validation API called with:", { contractCode: !!contractCode, contractName, projectPath: !!projectPath });
-
-    // Validate either a contract code or a project path
-    if (projectPath) {
-      // Validate an existing project
-      console.log("Validating project at path:", projectPath);
-      const result = await validateProjectWithClarinet(projectPath);
-      console.log("Project validation result:", result);
-      return Response.json(result);
-    } else if (contractCode && contractName) {
-      // Validate contract code directly
-      console.log("Validating contract code for:", contractName);
-      const result = await validateWithClarinet(contractCode, contractName);
-      console.log("Contract validation result:", result);
-      return Response.json(result);
-    } else {
-      return Response.json(
-        { error: "Either contractCode and contractName or projectPath are required" },
-        { status: 400 }
-      );
-    }
+    
+    // Call the dedicated validation service
+    const validationResponse = await fetch(
+      `${req.nextUrl.origin}/api/validate-clarity`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
+    
+    const result = await validationResponse.json();
+    return Response.json(result);
   } catch (error) {
     console.error("[v0] Validation API Error:", error);
     return Response.json(

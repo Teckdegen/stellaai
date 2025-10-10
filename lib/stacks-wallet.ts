@@ -7,7 +7,8 @@ import {
   StacksTransactionWire,
   TxBroadcastResult,
   estimateContractDeploy,
-  getNonce
+  getNonce,
+  StacksNetwork
 } from "@stacks/transactions"
 import { handleTransactionError, formatErrorForConsole } from "./transaction-error-handler"
 
@@ -36,32 +37,51 @@ export async function deployContractWithPrivateKey(
       throw new Error("Invalid private key provided")
     }
 
-    const stacksNetwork = network === "testnet" ? STACKS_TESTNET : STACKS_MAINNET
+    const stacksNetwork: StacksNetwork = network === "testnet" ? STACKS_TESTNET : STACKS_MAINNET
 
     // Ensure contractName is valid
     const cleanContractName = contractName?.replace(/[^a-zA-Z0-9-]/g, "-")?.toLowerCase() || "contract"
 
     console.log("[v0] Deploying contract:", cleanContractName, "to", network)
 
-    // Estimate transaction fees and nonce
-    let fee: bigint
-    let nonce: bigint
+    // Get the current nonce for the sender with retry logic
+    let nonce: bigint = BigInt(0)
+    let fee: bigint = BigInt(1000000)
     
     try {
-      // Estimate the fee for the contract deployment
-      fee = await estimateContractDeploy({
-        contractName: cleanContractName,
-        codeBody: codeBody || "",
-        senderKey: privateKey,
-        network: stacksNetwork,
-      })
+      // Retry logic for getting nonce
+      let attempts = 0
+      const maxAttempts = 3
+      while (attempts < maxAttempts) {
+        try {
+          nonce = await getNonce(senderAddress, stacksNetwork)
+          console.log("[v0] Retrieved nonce:", nonce.toString())
+          break
+        } catch (nonceError) {
+          attempts++
+          if (attempts >= maxAttempts) {
+            console.warn("[v0] Failed to get nonce after", maxAttempts, "attempts:", nonceError)
+            break
+          }
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempts))
+        }
+      }
       
-      // Get the current nonce for the sender
-      nonce = await getNonce(senderAddress, stacksNetwork)
+      // Estimate the fee for the contract deployment
+      try {
+        fee = await estimateContractDeploy({
+          contractName: cleanContractName,
+          codeBody: codeBody || "",
+          senderKey: privateKey,
+          network: stacksNetwork,
+        })
+        console.log("[v0] Estimated fee:", fee.toString())
+      } catch (feeError) {
+        console.warn("[v0] Failed to estimate fee, using default:", feeError)
+      }
     } catch (estimationError) {
       console.warn("[v0] Could not estimate fee/nonce, using defaults:", estimationError)
-      fee = BigInt(1000000) // Default fee in microSTX
-      nonce = BigInt(0) // Default nonce
     }
 
     // Create the contract deployment transaction with estimated fee and nonce
@@ -98,6 +118,8 @@ export async function deployContractWithPrivateKey(
         throw new Error(`A contract with the name "${cleanContractName}" already exists for this address. Please use a different contract name.`)
       } else if (result.reason === 'FeeTooLow') {
         throw new Error(`Transaction fee is too low. Please try again with a higher fee.`)
+      } else if (result.reason === 'BadNonce') {
+        throw new Error(`Transaction nonce mismatch. This can happen if you have pending transactions. Please wait for them to complete and try again.`)
       } else {
         throw new Error(`Transaction broadcast failed: ${result.reason} - ${result.error}`)
       }

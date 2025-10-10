@@ -72,10 +72,43 @@ export default function ProjectPage() {
     })
 
     if (reason) {
-      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [...prev, { type: "info", message: reason, timestamp }])
+      setConsoleMessages((prev) => [...prev, { type: "info", message: reason, timestamp }])
     }
 
-    // Remove the built-in validation - only use Clarinet validation
+    // Run validation with the dedicated validation service
+    try {
+      const response = await fetch("/api/validate-clarity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contractCode: newCode,
+          contractName: project?.contractName || "unnamed-contract",
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setConsoleMessages((prev) => [
+          ...prev,
+          { type: "success", message: "Code validation passed", timestamp },
+        ])
+      } else {
+        // Display validation errors
+        setConsoleMessages((prev) => [
+          ...prev,
+          { type: "error", message: `Validation failed: ${result.errors}`, timestamp },
+        ])
+      }
+    } catch (error) {
+      console.error("Validation service error:", error)
+      setConsoleMessages((prev) => [
+        ...prev,
+        { type: "error", message: "Failed to run code validation service", timestamp },
+      ])
+    }
   }
 
   const handleCodeChange = (newCode: string) => {

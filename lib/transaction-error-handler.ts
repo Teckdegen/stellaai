@@ -75,9 +75,10 @@ export function handleTransactionError(error: any, result?: TxBroadcastResult): 
             "Nonce synchronization issue with the network"
           ],
           solutions: [
-            "Wait for pending transactions to complete",
+            "Wait for pending transactions to complete (check Stacks explorer)",
             "Refresh your wallet to sync the latest nonce",
-            "Manually set the correct nonce if your wallet supports it"
+            "Wait 10-15 minutes and try again",
+            "Use a different wallet if the issue persists"
           ],
           severity: "error"
         };
