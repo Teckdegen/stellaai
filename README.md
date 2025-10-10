@@ -24,14 +24,9 @@ And replace them with your actual keys.
 
 ## 🛠️ Clarinet CLI Setup
 
-This project integrates with Clarinet CLI for advanced contract validation. To use this feature:
+This project now integrates with Clarinet CLI for advanced contract validation directly on Vercel serverless functions. No local installation required!
 
-1. Install Clarinet CLI globally:
-   ```bash
-   npm install -g @hirosystems/clarinet
-   ```
-
-2. The IDE will automatically validate your contracts using Clarinet whenever you make changes
+The IDE will automatically validate your contracts using Clarinet whenever you make changes, whether running locally or deployed to Vercel.
 
 ## How It Works
 
@@ -47,7 +42,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 
 - 🤖 **Dual AI Support**: Switch between Groq Llama and Google Gemini
 - ✅ **Built-in Validation**: Automatic syntax checking and error detection before deployment
-- 🧪 **Clarinet CLI Integration**: Advanced contract validation using Hiro's Clarinet CLI
+- 🧪 **Clarinet CLI Integration**: Advanced contract validation using Hiro's Clarinet CLI (runs serverless on Vercel)
 - 🛠️ **AI-Assisted Fixes**: Get suggestions for fixing common Clarity code issues
 - ⚡ **One-Click Deploy**: Deploy directly to Stacks blockchain with private key
 - 💾 **Local Storage**: Projects saved in your browser's local storage
@@ -60,7 +55,6 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 - Node.js 18+ installed
 - A Groq API key (get one at https://console.groq.com)
 - A Google Gemini API key (get one at https://aistudio.google.com)
-- Clarinet CLI installed globally (`npm install -g @hirosystems/clarinet`)
 - A Stacks private key for deployment
 
 ## Getting Started
@@ -83,17 +77,12 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
      - `GROQ_API_KEY=your-groq-api-key`
      - `GEMINI_API_KEY=your-gemini-api-key`
 
-4. **Install Clarinet CLI:**
-   ```bash
-   npm install -g @hirosystems/clarinet
-   ```
-
-5. **Run the development server:**
+4. **Run the development server:**
    ```bash
    npm run dev
    ```
 
-6. **Open your browser:**
+5. **Open your browser:**
    Navigate to `http://localhost:3000` to start using Stella AI.
 
 ## Usage
@@ -110,7 +99,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
      - "Create an NFT contract with minting"
      - "Add staking functionality"
      - "Create a marketplace with royalties"
-   - Toggle between Groq and Gemini AI models using the switch in the chat header
+   - Toggle between AI models using the switch in the chat header
 
 3. **Edit Code:**
    - The generated code appears in the editor
@@ -151,8 +140,8 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 │   ├── project-storage.ts   # Project storage management
 │   ├── stacks-wallet.ts     # Stacks private key deployment
 │   └── transaction-error-handler.ts # Enhanced error handling
-├── scripts/                # Deployment scripts
-│   └── deploy-contract.ts  # Standalone deployment script
+├── scripts/               # Deployment scripts
+│   └── deploy-contract.ts # Standalone deployment script
 └── public/                # Static assets
 ```
 
@@ -168,6 +157,8 @@ This project is configured for easy deployment to Vercel:
 1. Connect your GitHub repository to Vercel
 2. Add your API keys directly to the source code before deploying
 3. Deploy!
+
+The Clarinet CLI validation now works automatically on Vercel without any additional setup.
 
 See [Vercel Deployment Guide](docs/vercel-deployment.md) for detailed instructions.
 
@@ -189,7 +180,7 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 - [Groq API](https://groq.com/) - AI inference (Llama 3.3 70b model)
 - [Google Gemini API](https://ai.google.dev/) - Alternative AI inference
 - [Stacks.js](https://stacks.js.org/) - Stacks blockchain integration
-- [Clarinet CLI](https://github.com/hirosystems/clarinet) - Clarity contract validation
+- [Clarinet CLI](https://github.com/hirosystems/clarinet) - Clarity contract validation (runs serverless)
 
 ## Troubleshooting
 

@@ -1,20 +1,10 @@
 import { NextRequest } from "next/server";
-import { validateWithClarinet, validateProjectWithClarinet, isClarinetInstalled } from "@/lib/clarinet-validator";
+import { validateWithClarinet, validateProjectWithClarinet } from "@/lib/clarinet-validator";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { contractCode, contractName, projectPath } = body;
-
-    // Check if Clarinet is installed
-    const isInstalled = await isClarinetInstalled();
-    if (!isInstalled) {
-      return Response.json({
-        success: false,
-        output: '',
-        errors: 'Clarinet CLI not found. Please install it globally with `npm install -g @hirosystems/clarinet`.'
-      });
-    }
 
     // Validate either a contract code or a project path
     if (projectPath) {
@@ -45,10 +35,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  try {
-    const isInstalled = await isClarinetInstalled();
-    return Response.json({ installed: isInstalled });
-  } catch (error) {
-    return Response.json({ installed: false, error: "Failed to check Clarinet installation" });
-  }
+  // Health check endpoint - always return success for Vercel deployment
+  return Response.json({ success: true, message: "Validation API is running" });
 }

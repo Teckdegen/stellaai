@@ -3,8 +3,45 @@ import { promisify } from 'util';
 import { join, dirname } from 'path';
 import { writeFile, mkdir, rm, access, constants } from 'fs/promises';
 import { tmpdir } from 'os';
+import { platform } from 'process';
+import { existsSync } from 'fs';
 
 const execPromise = promisify(exec);
+
+// Function to download and setup Clarinet CLI on Vercel
+async function setupClarinetCLI(): Promise<string> {
+  const isVercel = !!process.env.VERCEL;
+  const tempDir = join(tmpdir(), 'clarinet-setup');
+  
+  if (isVercel) {
+    // On Vercel, download and extract Clarinet CLI
+    try {
+      // Create temp directory
+      await mkdir(tempDir, { recursive: true });
+      
+      // Download Clarinet CLI for Linux (Vercel uses Linux)
+      const downloadCommand = `curl -L https://github.com/hirosystems/clarinet/releases/download/v3.8.0/clarinet-linux-x64.gz -o ${join(tempDir, 'clarinet.gz')}`;
+      await execPromise(downloadCommand, { timeout: 30000 });
+      
+      // Extract the gz file
+      await execPromise(`gunzip ${join(tempDir, 'clarinet.gz')}`, { timeout: 30000 });
+      
+      // Make it executable
+      const clarinetPath = join(tempDir, 'clarinet');
+      await execPromise(`chmod +x ${clarinetPath}`, { timeout: 5000 });
+      
+      return clarinetPath;
+    } catch (error) {
+      throw new Error(`Failed to setup Clarinet CLI on Vercel: ${error}`);
+    }
+  } else if (platform === 'win32') {
+    // On Windows, use the installed path
+    return '"C:\\Program Files\\clarinet\\bin\\clarinet.exe"';
+  } else {
+    // On other platforms, assume clarinet is in PATH
+    return 'clarinet';
+  }
+}
 
 /**
  * Validates a Clarity contract using Clarinet CLI
@@ -18,8 +55,12 @@ export async function validateWithClarinet(contractCode: string, contractName: s
   errors?: string;
 }> {
   let tempDir: string | null = null;
+  let clarinetPath: string | null = null;
   
   try {
+    // Setup Clarinet CLI
+    clarinetPath = await setupClarinetCLI();
+    
     // Create a temporary directory for validation
     tempDir = join(tmpdir(), `clarinet-validation-${Date.now()}-${Math.random().toString(36).substring(7)}`);
     await mkdir(tempDir, { recursive: true });
@@ -45,20 +86,9 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
     // Write the contract file
     await writeFile(join(contractsDir, `${contractName}.clar`), contractCode);
     
-    // Check if Clarinet CLI is installed
-    try {
-      await execPromise('clarinet --version', { timeout: 5000 });
-    } catch (error) {
-      return {
-        success: false,
-        output: '',
-        errors: 'Clarinet CLI not found. Please install it globally with `npm install -g @hirosystems/clarinet`.'
-      };
-    }
-    
     // Run clarinet check command
     try {
-      const { stdout, stderr } = await execPromise('clarinet check', { 
+      const { stdout, stderr } = await execPromise(`${clarinetPath} check`, { 
         cwd: tempDir,
         timeout: 30000, // 30 second timeout
         maxBuffer: 1024 * 1024 // 1MB buffer
@@ -85,7 +115,7 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
       errors: `Validation failed: ${error.message}`
     };
   } finally {
-    // Clean up temporary directory
+    // Clean up temporary directories
     if (tempDir) {
       try {
         await rm(tempDir, { recursive: true, force: true });
@@ -107,16 +137,8 @@ export async function validateProjectWithClarinet(projectPath: string): Promise<
   errors?: string;
 }> {
   try {
-    // Check if Clarinet CLI is installed
-    try {
-      await execPromise('clarinet --version', { timeout: 5000 });
-    } catch (error) {
-      return {
-        success: false,
-        output: '',
-        errors: 'Clarinet CLI not found. Please install it globally with `npm install -g @hirosystems/clarinet`.'
-      };
-    }
+    // Setup Clarinet CLI
+    const clarinetPath = await setupClarinetCLI();
     
     // Check if Clarinet.toml exists in the project directory
     try {
@@ -131,7 +153,7 @@ export async function validateProjectWithClarinet(projectPath: string): Promise<
     
     // Run clarinet check command
     try {
-      const { stdout, stderr } = await execPromise('clarinet check', { 
+      const { stdout, stderr } = await execPromise(`${clarinetPath} check`, { 
         cwd: projectPath,
         timeout: 30000, // 30 second timeout
         maxBuffer: 1024 * 1024 // 1MB buffer
@@ -161,12 +183,13 @@ export async function validateProjectWithClarinet(projectPath: string): Promise<
 }
 
 /**
- * Checks if Clarinet CLI is installed
- * @returns Boolean indicating if Clarinet is installed
+ * Checks if Clarinet CLI is installed or can be setup
+ * @returns Boolean indicating if Clarinet is available
  */
 export async function isClarinetInstalled(): Promise<boolean> {
   try {
-    await execPromise('clarinet --version', { timeout: 5000 });
+    const clarinetPath = await setupClarinetCLI();
+    await execPromise(`${clarinetPath} --version`, { timeout: 5000 });
     return true;
   } catch (error) {
     return false;
