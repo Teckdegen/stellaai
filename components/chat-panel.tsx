@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollablePanel } from "@/components/ui/scrollable-panel"
-import { Send, Sparkles, Loader2, BookOpen } from "lucide-react"
+import { Send, Sparkles, Loader2, BookOpen, Bot } from "lucide-react"
 import { ChatHistoryManager } from "@/lib/chat-history"
 
 interface Message {
@@ -44,6 +44,7 @@ Key Technologies:
 - Radix UI for accessible components
 - Stacks blockchain for smart contract deployment
 - Groq Llama 3.3 70b for AI assistance
+- Google Gemini for alternative AI assistance
 - react-resizable-panels for layout management
 
 Core Features:
@@ -53,6 +54,7 @@ Core Features:
 - Project management and persistence
 - Chat history with code versioning
 - Responsive design with mobile support
+- Dual AI support (Groq Llama and Google Gemini)
 
 Code Analysis Capabilities:
 - Can explain any part of the existing codebase in detail
@@ -78,13 +80,14 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       {
         id: "welcome",
         role: "assistant",
-        content: `Hello! I'm Clarity AI, your smart contract assistant.\n\nI specialize in generating Clarity smart contracts for the Stacks blockchain. Just describe what you want to build, and I'll generate the code for you.\n\nExamples:\n- "Create an NFT contract"\n- "Add staking functionality"\n- "Create a token contract"\n\nI'll focus on writing code rather than lengthy explanations. You can view the generated code in the editor panel.`,
+        content: `Hello! I'm Clarity AI, your smart contract assistant.\n\nI specialize in generating Clarity smart contracts for the Stacks blockchain. Just describe what you want to build, and I'll generate the code for you.\n\nExamples:\n- "Create an NFT contract"\n- "Add staking functionality"\n- "Create a token contract"\n\nI'll focus on writing code rather than lengthy explanations. You can view the generated code in the editor panel.\n\nYou can switch between AI models using the toggle in the header.`,
       },
     ]
   })
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [lastProcessedMessage, setLastProcessedMessage] = useState<string>("")
+  const [selectedAI, setSelectedAI] = useState<"groq" | "gemini">("groq")
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -345,8 +348,11 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
       // Get codebase context
       const codebaseContext = getCodebaseContext()
 
+      // Call the appropriate API based on selected AI
+      const apiEndpoint = selectedAI === "groq" ? "/api/chat" : "/api/gemini"
+      
       // Call the API
-      const response = await fetch("/api/chat", {
+      const response = await fetch(apiEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -431,11 +437,40 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
 
   return (
     <div className="flex flex-col h-full bg-black chat-panel-container">
-      {/* Header */}
+      {/* Header with AI selection */}
       <div className="p-4 border-b border-white/10 flex-shrink-0 bg-black">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-white" />
-          <h2 className="font-semibold text-sm text-white">Clarity AI</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-white" />
+            <h2 className="font-semibold text-sm text-white">Clarity AI</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400">AI:</span>
+            <div className="flex rounded-full bg-white/10 p-1">
+              <button
+                onClick={() => setSelectedAI("groq")}
+                className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full transition-colors ${
+                  selectedAI === "groq" 
+                    ? "bg-white text-black" 
+                    : "text-gray-300 hover:bg-white/10"
+                }`}
+              >
+                <Bot className="w-3 h-3" />
+                Groq
+              </button>
+              <button
+                onClick={() => setSelectedAI("gemini")}
+                className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full transition-colors ${
+                  selectedAI === "gemini" 
+                    ? "bg-white text-black" 
+                    : "text-gray-300 hover:bg-white/10"
+                }`}
+              >
+                <Bot className="w-3 h-3" />
+                Gemini
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -465,7 +500,9 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
               <div className="chat-message-content bg-white/5 text-white rounded-lg p-3">
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  <span className="text-xs text-gray-400">Clarity AI is thinking...</span>
+                  <span className="text-xs text-gray-400">
+                    {selectedAI === "groq" ? "Groq AI is thinking..." : "Gemini AI is thinking..."}
+                  </span>
                 </div>
               </div>
             </div>

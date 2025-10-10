@@ -1,11 +1,9 @@
 import { NextRequest } from "next/server";
 
-export const maxDuration = 60; // Increased from 30 to 60 seconds
+// Get API key from environment variables
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "your-gemini-api-key-here";
 
-// Get API key from environment variables or use default
-const GROQ_API_KEY = process.env.GROQ_API_KEY || "your-groq-api-key-here";
-
-async function callGroq(prompt: string, contractName: string, network: string, currentCode: string, codebaseContext: string) {
+async function callGemini(prompt: string, contractName: string, network: string, currentCode: string, codebaseContext: string) {
   try {
     const contextMessage = `Current project context:
 - Contract Name: ${contractName}
@@ -28,18 +26,7 @@ When analyzing existing code:
 - Explain the purpose of different sections
 - Point out best practices and SIP compliance`;
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${GROQ_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile", // Using the most capable model
-        messages: [
-          {
-            role: "system",
-            content: `You are Stella, an expert Clarity smart contract developer for the Stacks blockchain. Your primary role is to generate Clarity code that follows Stacks protocol standards.
+    const systemPrompt = `You are Stella, an expert Clarity smart contract developer for the Stacks blockchain. Your primary role is to generate Clarity code that follows Stacks protocol standards.
 
 Key instructions for generating Clarity contracts:
 1. ALWAYS generate complete, valid Clarity contracts with proper structure
@@ -89,35 +76,55 @@ When analyzing the codebase:
 - Identify patterns and best practices
 - Suggest improvements when relevant
 
-Format your responses with minimal text and maximum code. Let the code speak for itself.`,
-          },
-          {
-            role: "user",
-            content: contextMessage,
-          },
-        ],
+Format your responses with minimal text and maximum code. Let the code speak for itself.`;
+
+    // Prepare the request body for Gemini API
+    const requestBody = {
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `${systemPrompt}\n\n${contextMessage}`
+            }
+          ]
+        }
+      ],
+      generationConfig: {
         temperature: 0.7,
-        max_tokens: 8000, // Increased from 3000 to 8000 for larger code generation
-        top_p: 0.9,
-        frequency_penalty: 0.2,
-        presence_penalty: 0.2,
-      }),
-    });
+        maxOutputTokens: 8000,
+        topP: 0.9,
+      }
+    };
+
+    // Call Gemini API using fetch
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
 
     if (data.error) {
-      console.error("Groq API Error:", data.error);
+      console.error("Gemini API Error:", data.error);
       return null;
     }
 
-    return data.choices[0].message.content;
+    // Extract the generated text from the response
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    return generatedText;
   } catch (error) {
-    console.error("Error calling Groq:", error);
+    console.error("Error calling Gemini:", error);
     return null;
   }
 }
@@ -129,10 +136,10 @@ export async function POST(req: NextRequest) {
     const userMessage = messages[messages.length - 1].content;
 
     // Get the AI response
-    const aiResponse = await callGroq(userMessage, contractName, network, currentCode, codebaseContext);
+    const aiResponse = await callGemini(userMessage, contractName, network, currentCode, codebaseContext);
 
     if (!aiResponse) {
-      throw new Error("Failed to get response from Groq");
+      throw new Error("Failed to get response from Gemini");
     }
 
     // Return the response directly as text
@@ -142,7 +149,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[v0] Chat API Error:", error);
+    console.error("[v0] Gemini API Error:", error);
     return Response.json({ error: "Failed to process request" }, { status: 500 });
   }
 }

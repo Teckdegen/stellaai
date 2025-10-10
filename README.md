@@ -4,13 +4,23 @@ Stella AI is the world's most advanced AI-powered development environment for cr
 
 ## 🔧 API KEY SETUP
 
-This project requires a Groq API key to function. You need to add your API key directly to the source code:
+This project requires API keys for both Groq and Google Gemini to function. You need to add your API keys directly to the source code or environment variables:
 
 1. Get your free Groq API key at https://console.groq.com
-2. Add it to this file:
-   - `app/api/chat/route.ts`
+2. Get your free Google Gemini API key at https://aistudio.google.com
+3. Add them to this file:
+   - `app/api/chat/route.ts` (for Groq)
+   - `app/api/gemini/route.ts` (for Gemini)
 
-Look for the line `const GROQ_API_KEY = "your-groq-api-key-here";` and replace it with your actual key.
+Alternatively, you can set them as environment variables:
+- `GROQ_API_KEY` for Groq
+- `GEMINI_API_KEY` for Google Gemini
+
+Look for the lines:
+- `const GROQ_API_KEY = "your-groq-api-key-here";`
+- `const GEMINI_API_KEY = "your-gemini-api-key-here";`
+
+And replace them with your actual keys.
 
 ## How It Works
 
@@ -24,7 +34,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 
 ## Features
 
-- 🤖 **AI-Powered Generation**: Describe your contract in plain English and let Stella generate Clarity code using the real Groq API
+- 🤖 **Dual AI Support**: Switch between Groq Llama and Google Gemini
 - ✅ **Built-in Validation**: Automatic syntax checking and error detection before deployment
 - 🛠️ **AI-Assisted Fixes**: Get suggestions for fixing common Clarity code issues
 - ⚡ **One-Click Deploy**: Deploy directly to Stacks blockchain with private key
@@ -37,6 +47,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 
 - Node.js 18+ installed
 - A Groq API key (get one at https://console.groq.com)
+- A Google Gemini API key (get one at https://aistudio.google.com)
 - A Stacks private key for deployment
 
 ## Getting Started
@@ -52,12 +63,19 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
    npm install
    ```
 
-3. **Run the development server:**
+3. **Set up API keys:**
+   - Add your Groq API key to `app/api/chat/route.ts`
+   - Add your Google Gemini API key to `app/api/gemini/route.ts`
+   - Or set them as environment variables:
+     - `GROQ_API_KEY=your-groq-api-key`
+     - `GEMINI_API_KEY=your-gemini-api-key`
+
+4. **Run the development server:**
    ```bash
    npm run dev
    ```
 
-4. **Open your browser:**
+5. **Open your browser:**
    Navigate to `http://localhost:3000` to start using Stella AI.
 
 ## Usage
@@ -74,6 +92,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
      - "Create an NFT contract with minting"
      - "Add staking functionality"
      - "Create a marketplace with royalties"
+   - Toggle between Groq and Gemini AI models using the switch in the chat header
 
 3. **Edit Code:**
    - The generated code appears in the editor
@@ -100,8 +119,10 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ```
 ├── app/                    # Next.js app router pages
-│   ├── api/chat/          # AI chat API endpoint (real Groq API integration)
-│   └── project/[id]/      # Project page
+│   ├── api/
+│   │   ├── chat/         # Groq Llama API endpoint
+│   │   └── gemini/       # Google Gemini API endpoint
+│   └── project/[id]/     # Project page
 ├── components/            # React components
 ├── lib/                   # Utility functions
 │   ├── clarity-validator.ts # Clarity code validation
@@ -116,7 +137,7 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## API Key Setup
 
-This project no longer uses environment variables for the Groq API key. Instead, you need to add your API key directly to the source code as described in the API Key Setup section above.
+This project no longer uses environment variables for the API keys by default. Instead, you need to add your API keys directly to the source code as described in the API Key Setup section above.
 
 ## Deployment
 
@@ -124,7 +145,7 @@ This project no longer uses environment variables for the Groq API key. Instead,
 This project is configured for easy deployment to Vercel:
 
 1. Connect your GitHub repository to Vercel
-2. Add your Groq API key directly to the source code before deploying
+2. Add your API keys directly to the source code before deploying
 3. Deploy!
 
 See [Vercel Deployment Guide](docs/vercel-deployment.md) for detailed instructions.
@@ -145,6 +166,7 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [shadcn/ui](https://ui.shadcn.com/) - UI components
 - [Groq API](https://groq.com/) - AI inference (Llama 3.3 70b model)
+- [Google Gemini API](https://ai.google.dev/) - Alternative AI inference
 - [Stacks.js](https://stacks.js.org/) - Stacks blockchain integration
 
 ## Troubleshooting
@@ -152,6 +174,7 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 ### AI Generation Issues
 - Ensure you have internet connectivity
 - Try rephrasing your request if the AI doesn't understand
+- Switch between AI models if one isn't working well
 
 ### Code Validation Issues
 - The AI can fix most syntax errors automatically
@@ -176,9 +199,9 @@ The IDE now provides enhanced error handling with detailed causes and solutions 
 
 ## Security
 
-Since you're adding the API key directly to the source code, make sure to:
-1. Never commit your actual API key to version control
-2. Add the files containing your API key to `.gitignore` if you're pushing to a public repository
+Since you're adding the API keys directly to the source code, make sure to:
+1. Never commit your actual API keys to version control
+2. Add the files containing your API keys to `.gitignore` if you're pushing to a public repository
 3. Use a separate branch or fork for development that isn't publicly accessible
 
 ## Contributing
