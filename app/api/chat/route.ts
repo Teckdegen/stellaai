@@ -4,9 +4,26 @@ import { Groq } from "groq-sdk"
 // Get API key from environment variable or source code
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "your-groq-api-key-here"
 
+// Log API key status for debugging
+console.log("Groq API Key configured:", !!GROQ_API_KEY && GROQ_API_KEY !== "your-groq-api-key-here")
+
 const groq = new Groq({ apiKey: GROQ_API_KEY })
 
 export async function POST(req: NextRequest) {
+  // Check if API key is configured
+  if (!GROQ_API_KEY || GROQ_API_KEY === "your-groq-api-key-here") {
+    console.error("Groq API key not configured")
+    return new Response(
+      JSON.stringify({ 
+        error: "Groq API key not configured. Please add your Groq API key to the environment variables or source code." 
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    )
+  }
+
   try {
     const body = await req.json()
     const { messages, contractName, network, currentCode, codebaseContext } = body
@@ -56,6 +73,8 @@ Key Clarity Development Principles:
       })),
     ]
 
+    console.log("Sending request to Groq API with", apiMessages.length, "messages")
+    
     // Call Groq API
     const completion = await groq.chat.completions.create({
       messages: apiMessages,
@@ -65,16 +84,21 @@ Key Clarity Development Principles:
       max_tokens: 2048,
     })
 
+    console.log("Received response from Groq API")
+    
     // Return a streaming response
     return new Response(completion.toReadableStream(), {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error("[v0] Groq API Error:", error)
     return new Response(
-      JSON.stringify({ error: "Failed to generate response" }),
+      JSON.stringify({ 
+        error: "Failed to generate response",
+        details: error.message || "Unknown error"
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },

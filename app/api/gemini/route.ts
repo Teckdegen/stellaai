@@ -4,9 +4,31 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 // Get API key from environment variable or source code
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "your-gemini-api-key-here"
 
+// Log API key status for debugging
+console.log("Gemini API Key configured:", !!GEMINI_API_KEY && GEMINI_API_KEY !== "your-gemini-api-key-here")
+
+// Check if API key is configured
+if (!GEMINI_API_KEY || GEMINI_API_KEY === "your-gemini-api-key-here") {
+  console.error("Gemini API key not configured")
+}
+
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
 
 export async function POST(req: NextRequest) {
+  // Check if API key is configured
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === "your-gemini-api-key-here") {
+    console.error("Gemini API key not configured")
+    return new Response(
+      JSON.stringify({ 
+        error: "Gemini API key not configured. Please add your Gemini API key to the environment variables or source code." 
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    )
+  }
+
   try {
     const body = await req.json()
     const { messages, contractName, network, currentCode, codebaseContext } = body
@@ -53,6 +75,8 @@ Key Clarity Development Principles:
       parts: [{ text: msg.content }],
     }))
 
+    console.log("Sending request to Gemini API with", messages.length, "messages")
+    
     // Initialize the model
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
 
@@ -71,6 +95,8 @@ Key Clarity Development Principles:
     // Send the message
     const result = await chat.sendMessageStream(lastUserMessage)
 
+    console.log("Received response from Gemini API")
+    
     // Create a ReadableStream from the response
     const stream = new ReadableStream({
       async start(controller) {
@@ -91,10 +117,13 @@ Key Clarity Development Principles:
         "Content-Type": "text/plain; charset=utf-8",
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error("[v0] Gemini API Error:", error)
     return new Response(
-      JSON.stringify({ error: "Failed to generate response" }),
+      JSON.stringify({ 
+        error: "Failed to generate response",
+        details: error.message || "Unknown error"
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
