@@ -14,16 +14,13 @@
       }
     }
   ],
+  "buildCommand": "node scripts/install-clarinet.cjs && pnpm build",
+  "outputDirectory": ".next",
+  "installCommand": "corepack enable && pnpm install --no-frozen-lockfile",
   "routes": [
     {
       "src": "/api/validate",
       "dest": "/app/api/validate/route.ts"
-    },
-    {
-      "src": "/api/validate-clarity",
-      "dest": "/api/validate-clarity/route.ts"
     }
-  ],
-  "buildCommand": "node scripts/install-clarinet.js && pnpm build",
-  "outputDirectory": ".next"
+  ]
 }

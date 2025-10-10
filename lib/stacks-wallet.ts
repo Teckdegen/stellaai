@@ -6,10 +6,9 @@ import {
   privateKeyToHex,
   StacksTransactionWire,
   TxBroadcastResult,
-  estimateContractDeploy,
-  getNonce,
   StacksNetwork
 } from "@stacks/transactions"
+import { fetchNonce, fetchFeeEstimate } from "@stacks/transactions/dist/esm/fetch"
 import { handleTransactionError, formatErrorForConsole } from "./transaction-error-handler"
 
 // Helper function to delay execution
@@ -61,7 +60,7 @@ export async function deployContractWithPrivateKey(
       
       while (attempts < maxAttempts && !success) {
         try {
-          nonce = await getNonce(senderAddress, stacksNetwork)
+          nonce = await fetchNonce({ address: senderAddress, network: stacksNetwork })
           console.log("[v0] Retrieved nonce:", nonce.toString())
           success = true
         } catch (nonceError) {
@@ -79,11 +78,13 @@ export async function deployContractWithPrivateKey(
       
       // Estimate the fee for the contract deployment
       try {
-        fee = await estimateContractDeploy({
-          contractName: cleanContractName,
-          codeBody: codeBody || "",
-          senderKey: privateKey,
-          network: stacksNetwork,
+        fee = await fetchFeeEstimate({
+          transaction: {
+            contractName: cleanContractName,
+            codeBody: codeBody || "",
+            senderKey: privateKey,
+            network: stacksNetwork,
+          } as any
         })
         console.log("[v0] Estimated fee:", fee.toString())
       } catch (feeError) {

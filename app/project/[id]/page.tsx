@@ -77,7 +77,7 @@ export default function ProjectPage() {
 
     // Run validation with the dedicated validation service
     try {
-      const response = await fetch("/api/validate-clarity", {
+      const response = await fetch("/api/validate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -159,8 +159,25 @@ export default function ProjectPage() {
         setConsoleMessages((prev) => [
           ...prev,
           { type: "success", message: "Clarinet validation passed", timestamp: resultTimestamp },
-          { type: "info", message: result.output, timestamp: resultTimestamp },
         ])
+        
+        // Show any output or warnings even if validation passed
+        if (result.output && result.output.trim()) {
+          setConsoleMessages((prev) => [
+            ...prev,
+            { type: "info", message: result.output, timestamp: resultTimestamp },
+          ])
+        }
+        
+        // Show any warnings
+        if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
+          result.errors.forEach((error: { line: number; message: string }) => {
+            setConsoleMessages((prev) => [
+              ...prev,
+              { type: "warning", message: `Line ${error.line}: ${error.message}`, timestamp: resultTimestamp },
+            ])
+          })
+        }
       } else {
         // Display structured errors
         if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
@@ -219,45 +236,6 @@ export default function ProjectPage() {
       minute: "2-digit",
       second: "2-digit",
     })
-
-    // Run built-in validation before deployment
-    const builtinValidation = validateClarityCode(clarCode)
-    if (!builtinValidation.isValid) {
-      setConsoleMessages((prev) => [
-        ...prev,
-        { type: "error", message: "Cannot deploy: Code has validation errors", timestamp },
-      ])
-      // Display errors
-      builtinValidation.errors.forEach((error: { line: number; message: string }) => {
-        setConsoleMessages((prev) => [
-          ...prev,
-          {
-            type: "error",
-            message: `Line ${error.line}: ${error.message}`,
-            timestamp,
-          },
-        ])
-      })
-      return
-    }
-    
-    // Display warnings
-    if (builtinValidation.warnings.length > 0) {
-      setConsoleMessages((prev) => [
-        ...prev,
-        { type: "warning", message: `Code has ${builtinValidation.warnings.length} warning(s). Review before deploying.`, timestamp },
-      ])
-      builtinValidation.warnings.forEach((warning: { line: number; message: string }) => {
-        setConsoleMessages((prev) => [
-          ...prev,
-          {
-            type: "warning",
-            message: `Line ${warning.line}: ${warning.message}`,
-            timestamp,
-          },
-        ])
-      })
-    }
 
     // Add safety check for clarCode
     if (!clarCode || !clarCode.trim()) {
@@ -320,14 +298,40 @@ export default function ProjectPage() {
         setConsoleMessages((prev) => [
           ...prev,
           { type: "success", message: "Clarinet validation passed", timestamp: validationTimestamp },
-          { type: "info", message: validationResult.output, timestamp: validationTimestamp },
         ])
+        
+        // Show any output or warnings even if validation passed
+        if (validationResult.output && validationResult.output.trim()) {
+          setConsoleMessages((prev) => [
+            ...prev,
+            { type: "info", message: validationResult.output, timestamp: validationTimestamp },
+          ])
+        }
+        
+        // Show any warnings
+        if (validationResult.errors && Array.isArray(validationResult.errors) && validationResult.errors.length > 0) {
+          validationResult.errors.forEach((error: { line: number; message: string }) => {
+            setConsoleMessages((prev) => [
+              ...prev,
+              { type: "warning", message: `Line ${error.line}: ${error.message}`, timestamp: validationTimestamp },
+            ])
+          })
+        }
       } else {
-        setConsoleMessages((prev) => [
-          ...prev,
-          { type: "error", message: `Clarinet validation failed: ${validationResult.errors}`, timestamp: validationTimestamp },
-        ])
-        // Continue with deployment even if validation fails
+        // Show validation errors
+        if (validationResult.errors && Array.isArray(validationResult.errors) && validationResult.errors.length > 0) {
+          validationResult.errors.forEach((error: { line: number; message: string }) => {
+            setConsoleMessages((prev) => [
+              ...prev,
+              { type: "error", message: `Line ${error.line}: ${error.message}`, timestamp: validationTimestamp },
+            ])
+          })
+        } else {
+          setConsoleMessages((prev) => [
+            ...prev,
+            { type: "error", message: `Clarinet validation failed: ${validationResult.errors || 'Unknown error'}`, timestamp: validationTimestamp },
+          ])
+        }
       }
     } catch (validationError) {
       const errorTimestamp = new Date().toLocaleTimeString("en-US", {

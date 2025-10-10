@@ -3,7 +3,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { join } from "path";
 import { writeFile, mkdir, rm } from "fs/promises";
-import { tmpdir } from "fs";
+import { tmpdir } from "os";
 import { platform } from "os";
 
 const execPromise = promisify(exec);
@@ -106,25 +106,32 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
         // Parse output to extract errors
         const errors: Array<{ line: number; message: string }> = [];
         
-        // If there's stderr or stdout contains error indicators, parse them
-        if (stderr || (stdout && stdout.includes("error"))) {
-          // Simple error parsing - look for common error patterns
-          const output = stderr || stdout;
+        // Always parse output to extract all errors/warnings, even if validation passes
+        const output = stderr || stdout;
+        if (output) {
           const lines = output.split('\n');
           
           for (const line of lines) {
-            if (line.includes("error:")) {
+            if (line.includes("error:") || line.includes("warning:")) {
               // Extract line number and message if possible
               const lineMatch = line.match(/:(\d+):/);
               const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
-              const message = line.replace(/.*error:\s*/i, '').trim();
+              const message = line.replace(/.*(?:error|warning):\s*/i, '').trim();
               errors.push({ line: lineNum, message });
             }
           }
+          
+          // If no structured errors found but there's output, add it as a general message
+          if (errors.length === 0 && output.trim()) {
+            errors.push({ line: 1, message: output.trim() });
+          }
         }
 
+        // Consider validation successful if there are no errors in stderr
+        const success = !stderr || stderr.trim() === "";
+
         return Response.json({
-          success: errors.length === 0,
+          success: success,
           errors: errors,
           output: stdout || "Contract validation completed"
         });

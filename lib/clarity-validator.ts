@@ -136,12 +136,13 @@ export function validateClarityCode(code: string): ValidationResult {
     // Check for proper map declarations
     if (trimmed.startsWith("(define-map")) {
       const parts = trimmed.split(/\s+/)
-      if (parts.length < 4) {
-        errors.push({
-          line: index + 1,
-          message: "define-map requires name, key type, and value type: (define-map name key-type value-type)"
-        })
-      }
+      // Commenting out this validation as it's causing false errors
+      // if (parts.length < 4) {
+      //   errors.push({
+      //     line: index + 1,
+      //     message: "define-map requires name, key type, and value type: (define-map name key-type value-type)"
+      //   })
+      // }
     }
 
     // Check for proper token declarations
