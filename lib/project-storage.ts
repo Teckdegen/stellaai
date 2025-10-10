@@ -10,10 +10,60 @@ export interface Project {
 const PROJECT_PREFIX = "clarity-project-"
 const PROJECT_LIST_KEY = "clarity-projects-list"
 
+// Default template for new Clarity contracts
+const DEFAULT_CLARITY_TEMPLATE = `;; ${"{{contractName}}"} Smart Contract
+;; ===============================================
+;; This contract implements a basic structure for a Clarity smart contract
+;; following Stacks blockchain best practices and standards.
+
+;; ===============================================
+;; Constants
+;; ===============================================
+(define-constant ERR-NOT-AUTHORIZED (err u100))
+(define-constant ERR-ALREADY-EXISTS (err u101))
+(define-constant ERR-NOT-FOUND (err u102))
+
+;; ===============================================
+;; Data Variables
+;; ===============================================
+(define-data-var owner principal tx-sender)
+
+;; ===============================================
+;; Data Maps
+;; ===============================================
+;; (define-map example-map { key-name: uint } { value-name: uint })
+
+;; ===============================================
+;; Traits
+;; ===============================================
+;; (define-trait example-trait (
+;;   (get-value (uint) (response uint uint))
+;; ))
+
+;; ===============================================
+;; Public Functions
+;; ===============================================
+
+;; ===============================================
+;; Read-only Functions
+;; ===============================================
+
+;; ===============================================
+;; Private Functions
+;; ===============================================
+
+;; Example function - replace with your own logic
+(define-public (hello-world)
+  (ok "Hello, World!"))
+`
+
 export class ProjectStorage {
   static createProject(contractName: string, network: "testnet" | "mainnet"): Project {
     const id = Math.random().toString(36).substring(2, 15)
     const now = new Date().toISOString()
+
+    // Create default contract content with the contract name
+    const clarFile = DEFAULT_CLARITY_TEMPLATE.replace("{{contractName}}", contractName)
 
     const project: Project = {
       id,
@@ -21,7 +71,7 @@ export class ProjectStorage {
       network,
       createdAt: now,
       updatedAt: now,
-      clarFile: "",
+      clarFile,
     }
 
     this.saveProject(project)
