@@ -53,6 +53,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 ## Prerequisites
 
 - Node.js 18+ installed
+- pnpm package manager
 - A Groq API key (get one at https://console.groq.com)
 - A Google Gemini API key (get one at https://aistudio.google.com)
 - A Stacks private key for deployment
@@ -67,7 +68,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 
 2. **Install dependencies:**
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Set up API keys:**
@@ -79,7 +80,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 
 4. **Run the development server:**
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
 5. **Open your browser:**
@@ -115,10 +116,10 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 You can also deploy contracts directly from the command line:
 ```bash
 # Deploy to testnet
-npm run deploy -- --network=testnet --contract=./contracts/my-contract.clar --key=your-private-key
+pnpm deploy -- --network=testnet --contract=./contracts/my-contract.clar --key=your-private-key
 
 # Deploy to mainnet
-npm run deploy -- --network=mainnet --contract=./contracts/my-contract.clar --key=your-private-key
+pnpm deploy -- --network=mainnet --contract=./contracts/my-contract.clar --key=your-private-key
 ```
 
 For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
@@ -165,8 +166,8 @@ See [Vercel Deployment Guide](docs/vercel-deployment.md) for detailed instructio
 ### Manual Deployment
 You can also deploy manually:
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
 For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
