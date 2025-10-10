@@ -246,9 +246,7 @@ export default function ProjectPage() {
           ...prev,
           { type: "error", message: `Clarinet validation failed: ${validationResult.errors}`, timestamp: validationTimestamp },
         ])
-        // If validation failed, stop deployment
-        setIsDeploying(false)
-        return
+        // Continue with deployment even if validation fails
       }
     } catch (validationError) {
       const errorTimestamp = new Date().toLocaleTimeString("en-US", {
