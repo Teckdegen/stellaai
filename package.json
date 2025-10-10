@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@ai-sdk/react": "latest",
+    "@google/generative-ai": "^0.12.0",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
