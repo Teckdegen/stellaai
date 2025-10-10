@@ -72,13 +72,15 @@ export function handleTransactionError(error: any, result?: TxBroadcastResult): 
           causes: [
             "Multiple transactions sent simultaneously",
             "Previous transaction is still pending",
-            "Nonce synchronization issue with the network"
+            "Nonce synchronization issue with the network",
+            "Network congestion causing delays in nonce updates"
           ],
           solutions: [
-            "Wait for pending transactions to complete (check Stacks explorer)",
-            "Refresh your wallet to sync the latest nonce",
-            "Wait 10-15 minutes and try again",
-            "Use a different wallet if the issue persists"
+            "Wait 5-10 minutes for pending transactions to clear",
+            "Check your address on the Stacks explorer for pending transactions",
+            "Try deploying again (the system will automatically adjust the nonce)",
+            "Use a different wallet if the issue persists",
+            "For testnet, you can get a new account from the faucet"
           ],
           severity: "error"
         };

@@ -1,7 +1,29 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "scripts/install-clarinet.sh && pnpm build",
-  "framework": "nextjs",
-  "regions": ["iad1"],
-  "installCommand": "pnpm install --no-frozen-lockfile"
+  "builds": [
+    {
+      "src": "scripts/install-clarinet.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "scripts/**",
+          "lib/**",
+          "components/**",
+          "app/**",
+          "!**/node_modules/**"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/validate",
+      "dest": "/app/api/validate/route.ts"
+    },
+    {
+      "src": "/api/validate-clarity",
+      "dest": "/api/validate-clarity/route.ts"
+    }
+  ],
+  "buildCommand": "node scripts/install-clarinet.js && pnpm build",
+  "outputDirectory": ".next"
 }

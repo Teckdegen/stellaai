@@ -2,30 +2,62 @@ const { execSync } = require('child_process');
 const { existsSync, mkdirSync } = require('fs');
 const { join } = require('path');
 
-// Only run on Vercel
-if (process.env.VERCEL) {
+// Function to install Clarinet CLI
+async function installClarinet() {
   try {
-    // Create a directory for Clarinet
-    const clarinetDir = join(process.env.VERCEL_BUILD_DIR || '/tmp', 'clarinet-bin');
-    if (!existsSync(clarinetDir)) {
-      mkdirSync(clarinetDir, { recursive: true });
+    const isVercel = !!process.env.VERCEL;
+    console.log('[Clarinet Installer] Running in Vercel environment:', isVercel);
+    
+    if (isVercel) {
+      // Vercel build environment - install Clarinet for Linux
+      const buildDir = process.env.VERCEL_BUILD_DIR || '/vercel/path0';
+      const clarinetDir = join(buildDir, 'clarinet-bin');
+      
+      console.log('[Clarinet Installer] Installing Clarinet in:', clarinetDir);
+      
+      // Create directory if it doesn't exist
+      if (!existsSync(clarinetDir)) {
+        mkdirSync(clarinetDir, { recursive: true });
+      }
+      
+      // Download and install Clarinet
+      console.log('[Clarinet Installer] Downloading Clarinet...');
+      execSync(
+        `cd ${clarinetDir} && wget -q https://github.com/hirosystems/clarinet/releases/latest/download/clarinet-x86_64-unknown-linux-gnu.tar.gz`,
+        { stdio: 'inherit' }
+      );
+      
+      console.log('[Clarinet Installer] Extracting Clarinet...');
+      execSync(
+        `cd ${clarinetDir} && tar -xzf clarinet-x86_64-unknown-linux-gnu.tar.gz`,
+        { stdio: 'inherit' }
+      );
+      
+      console.log('[Clarinet Installer] Setting permissions...');
+      execSync(
+        `cd ${clarinetDir} && chmod +x clarinet`,
+        { stdio: 'inherit' }
+      );
+      
+      console.log('[Clarinet Installer] Clarinet installed successfully in:', clarinetDir);
+      console.log('[Clarinet Installer] Clarinet version:', execSync(`${join(clarinetDir, 'clarinet')} --version`, { encoding: 'utf-8' }).trim());
+    } else {
+      // Local development - check if Clarinet is already installed
+      try {
+        const version = execSync('clarinet --version', { encoding: 'utf-8' });
+        console.log('[Clarinet Installer] Clarinet already installed:', version.trim());
+      } catch (error) {
+        console.log('[Clarinet Installer] Clarinet not found in PATH. Please install manually from https://github.com/hirosystems/clarinet');
+      }
     }
-    
-    // Download Clarinet CLI for Linux (Vercel uses Linux)
-    const clarinetPath = join(clarinetDir, 'clarinet');
-    
-    // Use curl with quiet mode to reduce output
-    execSync(`curl -s -L --retry 3 --retry-delay 2 https://github.com/hirosystems/clarinet/releases/download/v3.8.0/clarinet-linux-x64 -o ${clarinetPath}`);
-    
-    // Make it executable
-    execSync(`chmod +x ${clarinetPath}`);
-    
-    // Test the installation quietly
-    execSync(`${clarinetPath} --version`, { stdio: 'ignore' });
-    
-    // Success message
-    console.log('Clarinet CLI installed successfully');
   } catch (error) {
-    // Silent fail - continue without Clarinet CLI
+    console.error('[Clarinet Installer] Error installing Clarinet:', error.message);
+    process.exit(1);
   }
 }
+
+// Run the installation
+installClarinet().catch(error => {
+  console.error('[Clarinet Installer] Fatal error:', error);
+  process.exit(1);
+});

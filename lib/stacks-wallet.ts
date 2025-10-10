@@ -12,6 +12,11 @@ import {
 } from "@stacks/transactions"
 import { handleTransactionError, formatErrorForConsole } from "./transaction-error-handler"
 
+// Helper function to delay execution
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Remove wallet connect functions and implement private key-based deployment
 export async function deployContractWithPrivateKey(
   contractName: string,
@@ -44,27 +49,31 @@ export async function deployContractWithPrivateKey(
 
     console.log("[v0] Deploying contract:", cleanContractName, "to", network)
 
-    // Get the current nonce for the sender with retry logic
+    // Get the current nonce for the sender with improved handling
     let nonce: bigint = BigInt(0)
     let fee: bigint = BigInt(1000000)
     
     try {
-      // Retry logic for getting nonce
+      // Retry logic for getting nonce with exponential backoff
       let attempts = 0
-      const maxAttempts = 3
-      while (attempts < maxAttempts) {
+      const maxAttempts = 5
+      let success = false
+      
+      while (attempts < maxAttempts && !success) {
         try {
           nonce = await getNonce(senderAddress, stacksNetwork)
           console.log("[v0] Retrieved nonce:", nonce.toString())
-          break
+          success = true
         } catch (nonceError) {
           attempts++
-          if (attempts >= maxAttempts) {
-            console.warn("[v0] Failed to get nonce after", maxAttempts, "attempts:", nonceError)
-            break
+          console.warn(`[v0] Failed to get nonce (attempt ${attempts}/${maxAttempts}):`, nonceError)
+          if (attempts < maxAttempts) {
+            // Exponential backoff: 1s, 2s, 4s, 8s
+            await delay(Math.pow(2, attempts) * 1000)
+          } else {
+            console.warn("[v0] Failed to get nonce after all attempts, using default nonce")
+            nonce = BigInt(0)
           }
-          // Wait before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempts))
         }
       }
       
@@ -96,16 +105,37 @@ export async function deployContractWithPrivateKey(
 
     console.log("[v0] Transaction created with fee:", fee.toString(), "and nonce:", nonce.toString())
 
-    // Broadcast the transaction
-    const result: TxBroadcastResult = await broadcastTransaction({
-      transaction: transaction,
-      network: stacksNetwork
-    })
+    // Broadcast the transaction with retry logic for BadNonce errors
+    let broadcastAttempts = 0
+    const maxBroadcastAttempts = 3
+    let result: TxBroadcastResult
     
-    console.log("[v0] Broadcast result:", result)
+    while (broadcastAttempts < maxBroadcastAttempts) {
+      result = await broadcastTransaction({
+        transaction: transaction,
+        network: stacksNetwork
+      })
+      
+      console.log("[v0] Broadcast result (attempt", broadcastAttempts + 1, "):", result)
+      
+      // If successful or if it's not a BadNonce error, break the loop
+      if (!('error' in result) || result.reason !== 'BadNonce') {
+        break
+      }
+      
+      // If it's a BadNonce error, increment nonce and retry
+      broadcastAttempts++
+      if (broadcastAttempts < maxBroadcastAttempts) {
+        console.log("[v0] BadNonce error, incrementing nonce and retrying...")
+        nonce = nonce + BigInt(1)
+        transaction.setNonce(nonce)
+        // Add a small delay before retrying
+        await delay(2000)
+      }
+    }
     
     // Check if result is successful or has error
-    if ('error' in result) {
+    if ('error' in result!) {
       const errorInfo = handleTransactionError(null, result)
       if (onDetailedError) {
         onDetailedError(formatErrorForConsole(errorInfo))
@@ -119,13 +149,13 @@ export async function deployContractWithPrivateKey(
       } else if (result.reason === 'FeeTooLow') {
         throw new Error(`Transaction fee is too low. Please try again with a higher fee.`)
       } else if (result.reason === 'BadNonce') {
-        throw new Error(`Transaction nonce mismatch. This can happen if you have pending transactions. Please wait for them to complete and try again.`)
+        throw new Error(`Transaction nonce mismatch after multiple attempts. This can happen if you have pending transactions or network congestion. Please wait for pending transactions to complete and try again.`)
       } else {
         throw new Error(`Transaction broadcast failed: ${result.reason} - ${result.error}`)
       }
     }
     
-    if (!result.txid) {
+    if (!result!.txid) {
       const errorInfo = handleTransactionError(new Error("No transaction ID returned from broadcast"))
       if (onDetailedError) {
         onDetailedError(formatErrorForConsole(errorInfo))
@@ -133,7 +163,7 @@ export async function deployContractWithPrivateKey(
       throw new Error("No transaction ID returned from broadcast")
     }
 
-    onSuccess(result.txid)
+    onSuccess(result!.txid)
   } catch (error) {
     console.error("[v0] Deployment error:", error)
     // If we haven't already provided detailed error info, do it now

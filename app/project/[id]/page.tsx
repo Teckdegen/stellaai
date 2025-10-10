@@ -129,7 +129,7 @@ export default function ProjectPage() {
     })
 
     setIsValidating(true)
-    setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+    setConsoleMessages((prev) => [
       ...prev,
       { type: "info", message: "Running Clarinet validation...", timestamp },
     ])
@@ -156,16 +156,26 @@ export default function ProjectPage() {
       })
 
       if (result.success) {
-        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+        setConsoleMessages((prev) => [
           ...prev,
           { type: "success", message: "Clarinet validation passed", timestamp: resultTimestamp },
           { type: "info", message: result.output, timestamp: resultTimestamp },
         ])
       } else {
-        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
-          ...prev,
-          { type: "error", message: `Clarinet validation failed: ${result.errors}`, timestamp: resultTimestamp },
-        ])
+        // Display structured errors
+        if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
+          result.errors.forEach((error: { line: number; message: string }) => {
+            setConsoleMessages((prev) => [
+              ...prev,
+              { type: "error", message: `Line ${error.line}: ${error.message}`, timestamp: resultTimestamp },
+            ])
+          })
+        } else {
+          setConsoleMessages((prev) => [
+            ...prev,
+            { type: "error", message: `Clarinet validation failed: ${result.errors || 'Unknown error'}`, timestamp: resultTimestamp },
+          ])
+        }
       }
     } catch (error) {
       const errorTimestamp = new Date().toLocaleTimeString("en-US", {
@@ -174,7 +184,7 @@ export default function ProjectPage() {
         minute: "2-digit",
         second: "2-digit",
       })
-      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+      setConsoleMessages((prev) => [
         ...prev,
         {
           type: "error",
@@ -196,7 +206,7 @@ export default function ProjectPage() {
         minute: "2-digit",
         second: "2-digit",
       })
-      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+      setConsoleMessages((prev) => [
         ...prev,
         { type: "error", message: "Project data not loaded", timestamp },
       ])
@@ -213,13 +223,13 @@ export default function ProjectPage() {
     // Run built-in validation before deployment
     const builtinValidation = validateClarityCode(clarCode)
     if (!builtinValidation.isValid) {
-      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+      setConsoleMessages((prev) => [
         ...prev,
         { type: "error", message: "Cannot deploy: Code has validation errors", timestamp },
       ])
       // Display errors
       builtinValidation.errors.forEach((error: { line: number; message: string }) => {
-        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+        setConsoleMessages((prev) => [
           ...prev,
           {
             type: "error",
@@ -233,12 +243,12 @@ export default function ProjectPage() {
     
     // Display warnings
     if (builtinValidation.warnings.length > 0) {
-      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+      setConsoleMessages((prev) => [
         ...prev,
         { type: "warning", message: `Code has ${builtinValidation.warnings.length} warning(s). Review before deploying.`, timestamp },
       ])
       builtinValidation.warnings.forEach((warning: { line: number; message: string }) => {
-        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+        setConsoleMessages((prev) => [
           ...prev,
           {
             type: "warning",
@@ -251,7 +261,7 @@ export default function ProjectPage() {
 
     // Add safety check for clarCode
     if (!clarCode || !clarCode.trim()) {
-      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+      setConsoleMessages((prev) => [
         ...prev,
         { type: "error", message: "Cannot deploy: No code to deploy", timestamp },
       ])
@@ -274,7 +284,7 @@ export default function ProjectPage() {
 
     setIsDeploying(true)
     setShowPrivateKeyDialog(false)
-    setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+    setConsoleMessages((prev) => [
       ...prev,
       { type: "info", message: "Initiating deployment to Stacks blockchain...", timestamp },
       { type: "info", message: `Network: ${project.network}`, timestamp },
@@ -307,13 +317,13 @@ export default function ProjectPage() {
 
       // Always show validation results, even if successful
       if (validationResult.success) {
-        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+        setConsoleMessages((prev) => [
           ...prev,
           { type: "success", message: "Clarinet validation passed", timestamp: validationTimestamp },
           { type: "info", message: validationResult.output, timestamp: validationTimestamp },
         ])
       } else {
-        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+        setConsoleMessages((prev) => [
           ...prev,
           { type: "error", message: `Clarinet validation failed: ${validationResult.errors}`, timestamp: validationTimestamp },
         ])
@@ -326,7 +336,7 @@ export default function ProjectPage() {
         minute: "2-digit",
         second: "2-digit",
       })
-      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+      setConsoleMessages((prev) => [
         ...prev,
         {
           type: "error",
@@ -349,7 +359,7 @@ export default function ProjectPage() {
           minute: "2-digit",
           second: "2-digit",
         })
-        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+        setConsoleMessages((prev) => [
           ...prev,
           { type: "success", message: `Deployment successful!`, timestamp: successTimestamp },
           { type: "info", message: `Transaction ID: ${txId}`, timestamp: successTimestamp },
@@ -370,7 +380,7 @@ export default function ProjectPage() {
           minute: "2-digit",
           second: "2-digit",
         })
-        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+        setConsoleMessages((prev) => [
           ...prev,
           { type: "error", message: `Deployment failed: ${error}`, timestamp: errorTimestamp },
         ])
