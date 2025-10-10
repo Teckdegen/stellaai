@@ -1,10 +1,23 @@
 ;; Example of a valid Clarity contract for testing validation
+
+;; Contract Header
+;; ===============================================
+
+;; Data Variables
 (define-data-var counter uint u0)
-(define-constant ERR-NOT-AUTHORIZED u1)
+
+;; Constants
+(define-constant owner 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM) ;; Example owner address
+
+;; Error Codes
+(define-constant err-not-authorized (err u1))
+
+;; Public Functions
+;; ===============================================
 
 (define-public (increment)
   (begin
-    (asserts! (is-eq tx-sender (contract-call? .owner get-owner)) (err ERR-NOT-AUTHORIZED))
+    (asserts! (is-eq tx-sender owner) err-not-authorized)
     (var-set counter (+ (var-get counter) u1))
     (ok true)
   )
@@ -15,5 +28,5 @@
 )
 
 (define-read-only (is-authorized)
-  (ok (is-eq tx-sender (contract-call? .owner get-owner)))
+  (ok (is-eq tx-sender owner))
 )
