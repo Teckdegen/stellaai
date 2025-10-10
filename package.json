@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@10.2.0",
   "engines": {
     "node": "22.x",
-    "pnpm": "9.x"
+    "pnpm": "10.x"
   },
   "scripts": {
     "postinstall": "next build",
