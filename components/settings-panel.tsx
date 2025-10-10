@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { AlertCircle, CheckCircle, Save, Key } from "lucide-react"
+import { Save, Key, Bot, Zap, Brain } from "lucide-react"
 import { toast } from "sonner"
 
 interface ApiKeys {
@@ -32,7 +32,6 @@ const DEFAULT_SETTINGS: Settings = {
 export function SettingsPanel() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [isSaving, setIsSaving] = useState(false)
-  const [isValidating, setIsValidating] = useState(false)
 
   // Load settings from localStorage on component mount
   useEffect(() => {
@@ -70,38 +69,16 @@ export function SettingsPanel() {
     }, 500)
   }
 
-  const validateApiKey = async (provider: string, apiKey: string) => {
-    setIsValidating(true)
-    try {
-      // In a real implementation, you would validate the API key with the provider
-      // This is just a mock validation for demonstration
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Mock validation result
-      const isValid = apiKey.length > 20
-      
-      if (isValid) {
-        toast.success(`${provider} API key is valid`)
-      } else {
-        toast.error(`${provider} API key is invalid`)
-      }
-    } catch (error) {
-      toast.error(`Failed to validate ${provider} API key`)
-    } finally {
-      setIsValidating(false)
-    }
-  }
-
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-black border-white/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Key className="w-5 h-5" />
-            AI Provider Settings
+            AI Provider Configuration
           </CardTitle>
           <CardDescription>
-            Configure your own API keys for different AI providers or use our default service
+            Configure your own API keys for different AI providers
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -130,36 +107,57 @@ export function SettingsPanel() {
                     setSettings(prev => ({ ...prev, selectedProvider: value }))
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-black border-white/20 text-white">
                     <SelectValue placeholder="Select a provider" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="openai">OpenAI</SelectItem>
-                    <SelectItem value="claude">Claude (Anthropic)</SelectItem>
-                    <SelectItem value="xai">X AI (xAI)</SelectItem>
+                  <SelectContent className="bg-black border-white/10 text-white">
+                    <SelectItem value="openai">
+                      <div className="flex items-center gap-2">
+                        <Brain className="w-4 h-4" />
+                        OpenAI
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="claude">
+                      <div className="flex items-center gap-2">
+                        <Bot className="w-4 h-4" />
+                        Claude (Anthropic)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="xai">
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4" />
+                        X AI (xAI)
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {settings.selectedProvider !== 'default' && (
                 <Tabs defaultValue={settings.selectedProvider} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
+                  <TabsList className="grid w-full grid-cols-3 bg-black border border-white/10">
                     <TabsTrigger 
                       value="openai" 
+                      className="data-[state=active]:bg-white data-[state=active]:text-black"
                       onClick={() => setSettings(prev => ({ ...prev, selectedProvider: 'openai' }))}
                     >
+                      <Brain className="w-4 h-4 mr-2" />
                       OpenAI
                     </TabsTrigger>
                     <TabsTrigger 
                       value="claude" 
+                      className="data-[state=active]:bg-white data-[state=active]:text-black"
                       onClick={() => setSettings(prev => ({ ...prev, selectedProvider: 'claude' }))}
                     >
+                      <Bot className="w-4 h-4 mr-2" />
                       Claude
                     </TabsTrigger>
                     <TabsTrigger 
                       value="xai" 
+                      className="data-[state=active]:bg-white data-[state=active]:text-black"
                       onClick={() => setSettings(prev => ({ ...prev, selectedProvider: 'xai' }))}
                     >
+                      <Zap className="w-4 h-4 mr-2" />
                       X AI
                     </TabsTrigger>
                   </TabsList>
@@ -167,22 +165,14 @@ export function SettingsPanel() {
                   <TabsContent value="openai" className="space-y-4 mt-4">
                     <div className="space-y-2">
                       <Label htmlFor="openai-key">OpenAI API Key</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="openai-key"
-                          type="password"
-                          placeholder="sk-..."
-                          value={settings.apiKeys.openai || ''}
-                          onChange={(e) => handleApiKeyChange('openai', e.target.value)}
-                        />
-                        <Button
-                          variant="outline"
-                          onClick={() => validateApiKey('OpenAI', settings.apiKeys.openai || '')}
-                          disabled={isValidating || !settings.apiKeys.openai}
-                        >
-                          {isValidating ? 'Validating...' : 'Validate'}
-                        </Button>
-                      </div>
+                      <Input
+                        id="openai-key"
+                        type="password"
+                        placeholder="sk-..."
+                        value={settings.apiKeys.openai || ''}
+                        onChange={(e) => handleApiKeyChange('openai', e.target.value)}
+                        className="bg-black border-white/20 text-white"
+                      />
                       <p className="text-xs text-gray-500">
                         Used for GPT models. Get your key from{' '}
                         <a 
@@ -200,22 +190,14 @@ export function SettingsPanel() {
                   <TabsContent value="claude" className="space-y-4 mt-4">
                     <div className="space-y-2">
                       <Label htmlFor="claude-key">Claude API Key</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="claude-key"
-                          type="password"
-                          placeholder="sk-ant-..."
-                          value={settings.apiKeys.claude || ''}
-                          onChange={(e) => handleApiKeyChange('claude', e.target.value)}
-                        />
-                        <Button
-                          variant="outline"
-                          onClick={() => validateApiKey('Claude', settings.apiKeys.claude || '')}
-                          disabled={isValidating || !settings.apiKeys.claude}
-                        >
-                          {isValidating ? 'Validating...' : 'Validate'}
-                        </Button>
-                      </div>
+                      <Input
+                        id="claude-key"
+                        type="password"
+                        placeholder="sk-ant-..."
+                        value={settings.apiKeys.claude || ''}
+                        onChange={(e) => handleApiKeyChange('claude', e.target.value)}
+                        className="bg-black border-white/20 text-white"
+                      />
                       <p className="text-xs text-gray-500">
                         Used for Claude models. Get your key from{' '}
                         <a 
@@ -233,22 +215,14 @@ export function SettingsPanel() {
                   <TabsContent value="xai" className="space-y-4 mt-4">
                     <div className="space-y-2">
                       <Label htmlFor="xai-key">X AI API Key</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="xai-key"
-                          type="password"
-                          placeholder="xai-..."
-                          value={settings.apiKeys.xai || ''}
-                          onChange={(e) => handleApiKeyChange('xai', e.target.value)}
-                        />
-                        <Button
-                          variant="outline"
-                          onClick={() => validateApiKey('X AI', settings.apiKeys.xai || '')}
-                          disabled={isValidating || !settings.apiKeys.xai}
-                        >
-                          {isValidating ? 'Validating...' : 'Validate'}
-                        </Button>
-                      </div>
+                      <Input
+                        id="xai-key"
+                        type="password"
+                        placeholder="xai-..."
+                        value={settings.apiKeys.xai || ''}
+                        onChange={(e) => handleApiKeyChange('xai', e.target.value)}
+                        className="bg-black border-white/20 text-white"
+                      />
                       <p className="text-xs text-gray-500">
                         Used for xAI models like Grok. Get your key from{' '}
                         <a 
@@ -268,10 +242,14 @@ export function SettingsPanel() {
           )}
 
           <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={isSaving}>
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              className="bg-white text-black hover:bg-gray-200"
+            >
               {isSaving ? (
                 <>
-                  <div className="animate-spin w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full" />
+                  <div className="animate-spin w-4 h-4 mr-2 border-2 border-black border-t-transparent rounded-full" />
                   Saving...
                 </>
               ) : (
@@ -281,46 +259,6 @@ export function SettingsPanel() {
                 </>
               )}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>System Prompts</CardTitle>
-          <CardDescription>
-            Pre-configured system prompts for each AI provider
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <h4 className="font-medium">OpenAI System Prompt</h4>
-            <div className="text-sm bg-gray-100 dark:bg-gray-800 p-3 rounded-md">
-              You are an expert Clarity smart contract developer for the Stacks blockchain. 
-              Help users write, debug, and optimize Clarity contracts. 
-              Always provide code examples when possible. 
-              Focus on security, readability, and best practices.
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <h4 className="font-medium">Claude System Prompt</h4>
-            <div className="text-sm bg-gray-100 dark:bg-gray-800 p-3 rounded-md">
-              You are a world-class Clarity smart contract engineer specializing in the Stacks blockchain ecosystem. 
-              Your expertise includes contract security, optimization, and integration with Stacks features. 
-              Provide detailed explanations and code examples. 
-              Always consider gas costs and security implications.
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <h4 className="font-medium">X AI System Prompt</h4>
-            <div className="text-sm bg-gray-100 dark:bg-gray-800 p-3 rounded-md">
-              You are a cutting-edge Clarity blockchain developer with deep knowledge of the Stacks network. 
-              Help users build secure, efficient smart contracts. 
-              Explain complex concepts clearly and provide practical examples. 
-              Focus on innovation, security, and performance optimization.
-            </div>
           </div>
         </CardContent>
       </Card>
