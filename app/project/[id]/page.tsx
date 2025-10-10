@@ -8,7 +8,7 @@ import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircl
 import { ChatPanel } from "@/components/chat-panel"
 import { CodeEditor } from "@/components/code-editor"
 import { ConsolePanel } from "@/components/console-panel"
-// Removed built-in validator import
+import { validateClarityCode } from "@/lib/clarity-validator"
 import { ProjectStorage, type Project } from "@/lib/project-storage"
 import { deployContractWithPrivateKey } from "@/lib/stacks-wallet"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -177,7 +177,45 @@ export default function ProjectPage() {
       second: "2-digit",
     })
 
-    // Remove built-in validation - only use Clarinet validation
+    // Run built-in validation before deployment
+    const builtinValidation = validateClarityCode(clarCode)
+    if (!builtinValidation.isValid) {
+      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+        ...prev,
+        { type: "error", message: "Cannot deploy: Code has validation errors", timestamp },
+      ])
+      // Display errors
+      builtinValidation.errors.forEach((error: { line: number; message: string }) => {
+        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+          ...prev,
+          {
+            type: "error",
+            message: `Line ${error.line}: ${error.message}`,
+            timestamp,
+          },
+        ])
+      })
+      return
+    }
+    
+    // Display warnings
+    if (builtinValidation.warnings.length > 0) {
+      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+        ...prev,
+        { type: "warning", message: `Code has ${builtinValidation.warnings.length} warning(s). Review before deploying.`, timestamp },
+      ])
+      builtinValidation.warnings.forEach((warning: { line: number; message: string }) => {
+        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+          ...prev,
+          {
+            type: "warning",
+            message: `Line ${warning.line}: ${warning.message}`,
+            timestamp,
+          },
+        ])
+      })
+    }
+
     // Add safety check for clarCode
     if (!clarCode || !clarCode.trim()) {
       setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [

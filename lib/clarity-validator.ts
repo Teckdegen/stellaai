@@ -5,6 +5,7 @@ export interface ValidationResult {
   warnings: Array<{ line: number; message: string }>
 }
 
+// Basic Stacks Clarity contract validation based on documentation
 export function validateClarityCode(code: string): ValidationResult {
   const errors: Array<{ line: number; message: string }> = []
   const warnings: Array<{ line: number; message: string }> = []
@@ -35,63 +36,143 @@ export function validateClarityCode(code: string): ValidationResult {
     errors.push({ line: lastParenLine, message: `${parenCount} unclosed parenthesis(es)` })
   }
 
-  // Check for basic Clarity keywords
+  // Check for basic contract structure
   const hasDefine = code.includes("define-")
   if (!hasDefine && code.trim().length > 0) {
     errors.push({ line: 1, message: "Contract must contain at least one define- declaration" })
   }
 
-  // Check for common syntax errors
+  // Check for valid contract name (Stacks naming conventions)
   lines.forEach((line, index) => {
     const trimmed = line.trim()
     
     // Skip empty lines and comments
     if (!trimmed || trimmed.startsWith(";;")) return
 
-    // Check for invalid characters in function names
+    // Check for valid function/variable names (Stacks naming conventions)
     if (trimmed.startsWith("(define-")) {
       const match = trimmed.match(/$$define-\w+\s+([^\s$$]+)/)
       if (match && match[1]) {
         const name = match[1]
+        // Stacks naming conventions: lowercase letters, numbers, hyphens, underscores, ?, and !
         if (!/^[a-z0-9\-_?!]+$/.test(name)) {
           errors.push({
             line: index + 1,
             message: `Invalid identifier "${name}". Use lowercase letters, numbers, hyphens, underscores, ?, and !`,
           })
         }
+        // Check for reserved keywords
+        const reservedKeywords = ['contract', 'tx-sender', 'block-height', 'burn-block-height', 'none', 'true', 'false']
+        if (reservedKeywords.includes(name)) {
+          errors.push({
+            line: index + 1,
+            message: `Identifier "${name}" is a reserved keyword and cannot be used`,
+          })
+        }
       }
     }
 
-    // Check for proper function definitions
-    if (trimmed.startsWith("(define-public") || trimmed.startsWith("(define-read-only") || trimmed.startsWith("(define-private")) {
+    // Check for proper response types in public functions
+    if (trimmed.startsWith("(define-public") || trimmed.startsWith("(define-read-only")) {
       // Check if the function has a proper return value
-      const hasReturn = trimmed.includes("(ok ") || trimmed.includes("(err ") || trimmed.includes("begin") || trimmed.includes("true") || trimmed.includes("false") || trimmed.includes("none")
-      if (!hasReturn) {
-        warnings.push({
-          line: index + 1,
-          message: "Public functions should typically return (ok ...) or (err ...) response types"
-        })
+      const hasResponse = trimmed.includes("(ok ") || trimmed.includes("(err ") || trimmed.includes("(some") || trimmed.includes("none")
+      if (!hasResponse && !trimmed.includes("begin")) {
+        // For read-only functions, they don't need to return (ok ...) or (err ...)
+        if (trimmed.startsWith("(define-public")) {
+          warnings.push({
+            line: index + 1,
+            message: "Public functions should typically return (ok ...) or (err ...) response types"
+          })
+        }
       }
     }
 
-    // Check for variable declarations without initial values
+    // Check for proper variable declarations
     if (trimmed.startsWith("(define-data-var")) {
       const parts = trimmed.split(/\s+/)
       if (parts.length < 4) {
         errors.push({
           line: index + 1,
-          message: "define-data-var requires name, type, and initial value"
+          message: "define-data-var requires name, type, and initial value: (define-data-var name type initial-value)"
         })
+      }
+      
+      // Check for valid Clarity types
+      if (parts.length >= 4) {
+        const typePart = parts[3]
+        // Valid Clarity types: int, uint, bool, principal, buff, string-ascii, string-utf8, optional, response, tuple
+        const validTypes = ['int', 'uint', 'bool', 'principal', 'buff', 'string-ascii', 'string-utf8', 'optional', 'response', 'tuple', '(optional', '(response', '(tuple']
+        const isValidType = validTypes.some(validType => typePart.includes(validType)) || 
+                          typePart.startsWith('(') && typePart.endsWith(')')
+        
+        if (!isValidType) {
+          // Special case: 'int' and 'uint' are valid types
+          if (typePart !== 'int' && typePart !== 'uint' && typePart !== 'bool' && typePart !== 'principal') {
+            warnings.push({
+              line: index + 1,
+              message: `Unrecognized type "${typePart}". Valid types include: int, uint, bool, principal, buff, string-ascii, string-utf8, optional, response, tuple`
+            })
+          }
+        }
+        
+        // Check initial value format for int/uint
+        if (parts.length >= 5 && (typePart === 'int' || typePart === 'uint')) {
+          const initialValue = parts[4].replace(/[()]/g, '') // Remove parentheses
+          if (typePart === 'uint' && !initialValue.startsWith('u') && initialValue !== '0') {
+            warnings.push({
+              line: index + 1,
+              message: `uint values should start with 'u' prefix (e.g., u0, u1, u100)`
+            })
+          } else if (typePart === 'int' && initialValue.startsWith('u')) {
+            warnings.push({
+              line: index + 1,
+              message: `int values should not start with 'u' prefix (e.g., 0, 1, -1)`
+            })
+          }
+        }
       }
     }
 
-    // Check for map declarations
+    // Check for proper map declarations
     if (trimmed.startsWith("(define-map")) {
       const parts = trimmed.split(/\s+/)
       if (parts.length < 4) {
         errors.push({
           line: index + 1,
-          message: "define-map requires name, key type, and value type"
+          message: "define-map requires name, key type, and value type: (define-map name key-type value-type)"
+        })
+      }
+    }
+
+    // Check for proper token declarations
+    if (trimmed.startsWith("(define-fungible-token")) {
+      const parts = trimmed.split(/\s+/)
+      if (parts.length < 2) {
+        errors.push({
+          line: index + 1,
+          message: "define-fungible-token requires name: (define-fungible-token name [supply])"
+        })
+      }
+    }
+
+    // Check for proper NFT declarations
+    if (trimmed.startsWith("(define-non-fungible-token")) {
+      const parts = trimmed.split(/\s+/)
+      if (parts.length < 3) {
+        errors.push({
+          line: index + 1,
+          message: "define-non-fungible-token requires name and asset class: (define-non-fungible-token name asset-class)"
+        })
+      }
+    }
+
+    // Check for proper trait declarations
+    if (trimmed.startsWith("(define-trait")) {
+      const parts = trimmed.split(/\s+/)
+      if (parts.length < 3) {
+        errors.push({
+          line: index + 1,
+          message: "define-trait requires name and signature: (define-trait name ((func-name (args) return-type)))"
         })
       }
     }
@@ -119,17 +200,26 @@ export function validateClarityCode(code: string): ValidationResult {
         message: "Error codes should use ERR- prefix for consistency (e.g., ERR-NOT-AUTHORIZED)"
       })
     }
-
-    // Check for begin usage without multiple expressions
-    if (trimmed.includes("(begin") && (trimmed.match(/\(/g) || []).length < 3) {
-      warnings.push({
-        line: index + 1,
-        message: "begin should be used with multiple expressions"
-      })
-    }
   })
 
-  // Check for proper contract structure
+  // Check for contract call patterns
+  if (code.includes("(contract-call?")) {
+    // Check for proper contract call usage
+    const contractCallPattern = /\(contract-call\?\s+'([^\s]+)\s+([^\s]+)/g
+    let match
+    while ((match = contractCallPattern.exec(code)) !== null) {
+      const contractName = match[1]
+      const functionName = match[2]
+      if (!contractName || !functionName) {
+        errors.push({
+          line: 1,
+          message: "Invalid contract-call? usage. Format: (contract-call? 'contract-name function-name args...)"
+        })
+      }
+    }
+  }
+
+  // Check for contract structure
   if (code.includes("(define-public") && !code.includes("(ok ") && !code.includes("(err ")) {
     warnings.push({
       line: 1,
@@ -137,7 +227,7 @@ export function validateClarityCode(code: string): ValidationResult {
     })
   }
 
-  // Check for missing standard functions in NFT contracts
+  // Check for missing standard functions in NFT contracts (SIP-009)
   if (code.includes("define-non-fungible-token")) {
     if (!code.includes("get-owner")) {
       warnings.push({
@@ -153,7 +243,7 @@ export function validateClarityCode(code: string): ValidationResult {
     }
   }
 
-  // Check for missing standard functions in FT contracts
+  // Check for missing standard functions in FT contracts (SIP-010)
   if (code.includes("define-fungible-token")) {
     if (!code.includes("transfer") || !code.includes("get-balance")) {
       warnings.push({
@@ -199,6 +289,18 @@ export function getSuggestedFix(error: { line: number; message: string }, code: 
     return "Format should be: (define-map name key-type value-type)"
   }
   
+  if (error.message.includes("define-fungible-token requires")) {
+    return "Format should be: (define-fungible-token name [supply])"
+  }
+  
+  if (error.message.includes("define-non-fungible-token requires")) {
+    return "Format should be: (define-non-fungible-token name asset-class)"
+  }
+  
+  if (error.message.includes("define-trait requires")) {
+    return "Format should be: (define-trait name ((func-name (args) return-type)))"
+  }
+  
   if (error.message.includes("should return")) {
     return "Wrap function body with (ok ...) for success or (err ...) for errors"
   }
@@ -215,8 +317,8 @@ export function getSuggestedFix(error: { line: number; message: string }, code: 
     return "Define error constants: (define-constant ERR-NOT-AUTHORIZED u1)"
   }
   
-  if (error.message.includes("begin should be used")) {
-    return "Add more expressions to the begin block or simplify to a single expression"
+  if (error.message.includes("Invalid contract-call? usage")) {
+    return "Format should be: (contract-call? 'contract-name function-name args...)"
   }
   
   if (error.message.includes("NFT contract should implement")) {
@@ -229,6 +331,14 @@ export function getSuggestedFix(error: { line: number; message: string }, code: 
   
   if (error.message.includes("Public functions found")) {
     return "Add (ok ...) or (err ...) return values to your public functions"
+  }
+  
+  if (error.message.includes("is a reserved keyword")) {
+    return "Choose a different name that doesn't conflict with reserved keywords"
+  }
+  
+  if (error.message.includes("Unrecognized type")) {
+    return "Use a valid Clarity type: int, uint, bool, principal, buff, string-ascii, string-utf8, optional, response, tuple"
   }
   
   return null

@@ -5,7 +5,9 @@ import {
   getAddressFromPrivateKey,
   privateKeyToHex,
   StacksTransactionWire,
-  TxBroadcastResult
+  TxBroadcastResult,
+  estimateContractDeploy,
+  getNonce
 } from "@stacks/transactions"
 import { handleTransactionError, formatErrorForConsole } from "./transaction-error-handler"
 
@@ -41,19 +43,46 @@ export async function deployContractWithPrivateKey(
 
     console.log("[v0] Deploying contract:", cleanContractName, "to", network)
 
-    // Create the contract deployment transaction
+    // Estimate transaction fees and nonce
+    let fee: bigint
+    let nonce: bigint
+    
+    try {
+      // Estimate the fee for the contract deployment
+      fee = await estimateContractDeploy({
+        contractName: cleanContractName,
+        codeBody: codeBody || "",
+        senderKey: privateKey,
+        network: stacksNetwork,
+      })
+      
+      // Get the current nonce for the sender
+      nonce = await getNonce(senderAddress, stacksNetwork)
+    } catch (estimationError) {
+      console.warn("[v0] Could not estimate fee/nonce, using defaults:", estimationError)
+      fee = BigInt(1000000) // Default fee in microSTX
+      nonce = BigInt(0) // Default nonce
+    }
+
+    // Create the contract deployment transaction with estimated fee and nonce
     const transaction: StacksTransactionWire = await makeContractDeploy({
       contractName: cleanContractName,
       codeBody: codeBody || "",
       senderKey: privateKey,
       network: stacksNetwork,
+      fee: fee,
+      nonce: nonce
     })
+
+    console.log("[v0] Transaction created with fee:", fee.toString(), "and nonce:", nonce.toString())
 
     // Broadcast the transaction
     const result: TxBroadcastResult = await broadcastTransaction({
       transaction: transaction,
       network: stacksNetwork
     })
+    
+    console.log("[v0] Broadcast result:", result)
     
     // Check if result is successful or has error
     if ('error' in result) {
