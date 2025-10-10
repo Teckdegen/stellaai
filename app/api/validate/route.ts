@@ -115,9 +115,12 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
             if (line.includes("error:") || line.includes("warning:")) {
               // Extract line number and message if possible
               const lineMatch = line.match(/:(\d+):/);
-              const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
+              const lineNum = lineMatch && lineMatch[1] ? parseInt(lineMatch[1]) : 1;
               const message = line.replace(/.*(?:error|warning):\s*/i, '').trim();
-              errors.push({ line: lineNum, message });
+              // Only add non-empty messages
+              if (message) {
+                errors.push({ line: lineNum || 1, message });
+              }
             }
           }
           
@@ -146,9 +149,12 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
             if (line.includes("error:") || line.includes("Error:")) {
               // Extract line number and message if possible
               const lineMatch = line.match(/:(\d+):/);
-              const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
+              const lineNum = lineMatch && lineMatch[1] ? parseInt(lineMatch[1]) : 1;
               const message = line.replace(/.*error:\s*/i, '').trim();
-              errors.push({ line: lineNum, message });
+              // Only add non-empty messages
+              if (message) {
+                errors.push({ line: lineNum || 1, message });
+              }
             }
           }
           
