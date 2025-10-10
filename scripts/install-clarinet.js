@@ -17,12 +17,20 @@ if (process.env.VERCEL) {
     
     // Download Clarinet CLI for Linux (Vercel uses Linux)
     const clarinetPath = join(clarinetDir, 'clarinet');
-    execSync(`curl -L https://github.com/hirosystems/clarinet/releases/download/v3.8.0/clarinet-linux-x64 -o ${clarinetPath}`, { 
+    console.log('Downloading Clarinet CLI to:', clarinetPath);
+    
+    // Use curl with more robust options
+    execSync(`curl -L --retry 3 --retry-delay 2 https://github.com/hirosystems/clarinet/releases/download/v3.8.0/clarinet-linux-x64 -o ${clarinetPath}`, { 
       stdio: 'inherit' 
     });
     
     // Make it executable
+    console.log('Making Clarinet CLI executable...');
     execSync(`chmod +x ${clarinetPath}`, { stdio: 'inherit' });
+    
+    // Test the installation
+    console.log('Testing Clarinet CLI installation...');
+    execSync(`${clarinetPath} --version`, { stdio: 'inherit' });
     
     console.log('Clarinet CLI installed successfully!');
   } catch (error) {

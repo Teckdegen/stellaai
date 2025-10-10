@@ -19,22 +19,32 @@ async function setupClarinetCLI(): Promise<string> {
       
       // Test if the file exists and is executable
       await execPromise(`test -f ${clarinetPath} && chmod +x ${clarinetPath}`, { timeout: 5000 });
+      
+      // Test if it actually works
+      await execPromise(`${clarinetPath} --version`, { timeout: 5000 });
+      
+      console.log('Using installed Clarinet CLI:', clarinetPath);
       return clarinetPath;
     } catch (error) {
+      console.log('Clarinet CLI not found in custom path, trying system clarinet...');
       // Try to use system clarinet
       try {
         await execPromise('which clarinet', { timeout: 5000 });
+        console.log('Using system Clarinet CLI');
         return 'clarinet';
       } catch (fallbackError) {
+        console.log('System Clarinet CLI not found, will use basic validation only');
         // If not available, we'll do a basic validation without downloading
-        throw new Error('Clarinet CLI not available on Vercel. Using basic validation only.');
+        throw new Error('Clarinet CLI not available. Using basic validation only.');
       }
     }
   } else if (platform() === 'win32') {
     // On Windows, use the installed path
+    console.log('Using Windows Clarinet CLI installation');
     return '"C:\\Program Files\\clarinet\\bin\\clarinet.exe"';
   } else {
     // On other platforms, assume clarinet is in PATH
+    console.log('Using system Clarinet CLI from PATH');
     return 'clarinet';
   }
 }
