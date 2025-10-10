@@ -372,59 +372,43 @@ export default function ProjectPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            size="sm"
-            onClick={handleValidate}
-            disabled={isValidating || !clarCode.trim()}
-            className="hidden sm:flex rounded-full px-4 bg-white/10 text-white border border-white/20 hover:bg-white/20"
-          >
-            {isValidating ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Validating...
-              </>
-            ) : (
-              <>
-                <Shield className="w-4 h-4 mr-2" />
-                Validate
-              </>
-            )}
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleDeploy}
-            disabled={isDeploying || !clarCode.trim()}
-            className="hidden sm:flex rounded-full px-4 bg-white text-black hover:bg-gray-200"
-          >
-            {isDeploying ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Deploying...
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 mr-2" />
-                Deploy Contract
-              </>
-            )}
-          </Button>
-          <div className="flex gap-2 sm:hidden">
-            <Button 
-              size="icon" 
-              onClick={handleValidate} 
-              disabled={isValidating || !clarCode.trim()} 
-              className="rounded-full bg-white/10 text-white border border-white/20 hover:bg-white/20"
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={handleValidate}
+              disabled={isValidating || !clarCode.trim()}
+              className="flex items-center gap-2 rounded-full px-4 bg-white/10 text-white border border-white/20 hover:bg-white/20"
             >
-              {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+              {isValidating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Validating...
+                </>
+              ) : (
+                <>
+                  <Shield className="w-4 h-4" />
+                  <span className="hidden sm:inline">Validate</span>
+                </>
+              )}
             </Button>
-            <Button 
-              size="icon" 
-              onClick={handleDeploy} 
-              disabled={isDeploying || !clarCode.trim()} 
-              className="rounded-full bg-white text-black hover:bg-gray-200"
+            <Button
+              size="sm"
+              onClick={handleDeploy}
+              disabled={isDeploying || !clarCode.trim()}
+              className="flex items-center gap-2 rounded-full px-4 bg-white text-black hover:bg-gray-200"
             >
-              {isDeploying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              {isDeploying ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Deploying...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4" />
+                  <span className="hidden sm:inline">Deploy</span>
+                </>
+              )}
             </Button>
           </div>
         </div>
