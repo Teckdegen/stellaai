@@ -9,7 +9,7 @@
     "pnpm": "10.x"
   },
   "scripts": {
-    "postinstall": "node scripts/install-clarinet.js",
+    "postinstall": "",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
