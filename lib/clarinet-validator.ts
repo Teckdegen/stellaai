@@ -4,10 +4,18 @@ import { join } from 'path';
 import { writeFile, mkdir, rm } from 'fs/promises';
 import { tmpdir, platform } from 'os';
 
+// Try to import Clarinet SDK (may not be available in all environments)
+let clarinetSDK: any = null;
+try {
+  clarinetSDK = require('@hirosystems/clarinet-sdk');
+} catch (error) {
+  console.log('Clarinet SDK not available, will use CLI or API fallback');
+}
+
 const execPromise = promisify(exec);
 
 // Function to setup Clarinet CLI
-async function setupClarinetCLI(): Promise<string> {
+async function setupClarinetCLI(): Promise<string | null> {
   const isVercel = !!process.env.VERCEL;
   
   if (isVercel) {
@@ -30,26 +38,72 @@ async function setupClarinetCLI(): Promise<string> {
         await execPromise('which clarinet', { timeout: 5000 });
         return 'clarinet';
       } catch (fallbackError) {
-        // If not available, we'll do a basic validation without downloading
-        throw new Error('Clarinet CLI not available. Using basic validation only.');
+        // If not available, return null to indicate CLI is not available
+        return null;
       }
     }
   } else if (platform() === 'win32') {
     // On Windows, use the installed path
-    return '"C:\\Program Files\\clarinet\\bin\\clarinet.exe"';
+    try {
+      const clarinetPath = '"C:\\Program Files\\clarinet\\bin\\clarinet.exe"';
+      await execPromise(`${clarinetPath} --version`, { timeout: 5000 });
+      return clarinetPath;
+    } catch (error) {
+      return null;
+    }
   } else {
     // On other platforms, assume clarinet is in PATH
-    return 'clarinet';
+    try {
+      await execPromise('clarinet --version', { timeout: 5000 });
+      return 'clarinet';
+    } catch (error) {
+      return null;
+    }
   }
 }
 
-/**
- * Validates a Clarity contract using Clarinet CLI
- * @param contractCode The Clarity contract code to validate
- * @param contractName The name of the contract
- * @returns Validation result with success status and output/errors
- */
-export async function validateWithClarinet(contractCode: string, contractName: string): Promise<{
+// Validate using Clarinet SDK
+async function validateWithSDK(contractCode: string, contractName: string): Promise<{
+  success: boolean;
+  output: string;
+  errors?: string;
+}> {
+  if (!clarinetSDK) {
+    return {
+      success: false,
+      output: '',
+      errors: 'Clarinet SDK not available'
+    };
+  }
+
+  try {
+    // Use the SDK to validate the contract
+    const result = await clarinetSDK.validateContract(contractCode);
+    
+    if (result.valid) {
+      return {
+        success: true,
+        output: 'Contract validation successful via SDK!',
+        errors: undefined
+      };
+    } else {
+      return {
+        success: false,
+        output: '',
+        errors: result.errors?.join('\n') || 'Validation failed via SDK'
+      };
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      output: '',
+      errors: `SDK validation failed: ${error.message}`
+    };
+  }
+}
+
+// Validate using Clarinet CLI
+async function validateWithCLI(contractCode: string, contractName: string): Promise<{
   success: boolean;
   output: string;
   errors?: string;
@@ -60,6 +114,15 @@ export async function validateWithClarinet(contractCode: string, contractName: s
   try {
     // Setup Clarinet CLI
     clarinetPath = await setupClarinetCLI();
+    
+    // If CLI is not available, return failure
+    if (!clarinetPath) {
+      return {
+        success: false,
+        output: '',
+        errors: 'Clarinet CLI not available'
+      };
+    }
     
     // Create a temporary directory for validation
     tempDir = join(tmpdir(), `clarinet-validation-${Date.now()}-${Math.random().toString(36).substring(7)}`);
@@ -97,7 +160,7 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
       // If we get here, validation succeeded
       return {
         success: true,
-        output: stdout || 'Contract validation successful!',
+        output: stdout || 'Contract validation successful via CLI!',
         errors: stderr || undefined
       };
     } catch (error: any) {
@@ -113,7 +176,7 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
     return {
       success: false,
       output: '',
-      errors: `Validation failed: ${error.message}. This may be due to Clarinet CLI not being available in this environment.`
+      errors: `CLI validation failed: ${error.message}`
     };
   } finally {
     // Clean up temporary directories
@@ -125,6 +188,85 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
       }
     }
   }
+}
+
+// Validate using Hiro Online API as fallback
+async function validateWithHiroAPI(contractCode: string): Promise<{
+  success: boolean;
+  output: string;
+  errors?: string;
+}> {
+  try {
+    const response = await fetch('https://api.testnet.hiro.so/v2/contracts/validate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contract_source: contractCode,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (result.result === 'success') {
+      return {
+        success: true,
+        output: 'Contract validation successful via Hiro API!',
+        errors: undefined
+      };
+    } else {
+      return {
+        success: false,
+        output: '',
+        errors: result.error || 'Validation failed via Hiro API'
+      };
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      output: '',
+      errors: `Hiro API validation failed: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Validates a Clarity contract using the best available method
+ * @param contractCode The Clarity contract code to validate
+ * @param contractName The name of the contract
+ * @returns Validation result with success status and output/errors
+ */
+export async function validateWithClarinet(contractCode: string, contractName: string): Promise<{
+  success: boolean;
+  output: string;
+  errors?: string;
+}> {
+  console.log('Starting validation with priority: SDK > CLI > API');
+  
+  // 1. Try SDK first (if available)
+  if (clarinetSDK) {
+    console.log('Attempting validation with Clarinet SDK');
+    const sdkResult = await validateWithSDK(contractCode, contractName);
+    if (sdkResult.success || sdkResult.errors !== 'Clarinet SDK not available') {
+      console.log('SDK validation result:', sdkResult.success ? 'success' : 'failure');
+      return sdkResult;
+    }
+  }
+  
+  // 2. Try CLI second
+  console.log('Attempting validation with Clarinet CLI');
+  const cliResult = await validateWithCLI(contractCode, contractName);
+  if (cliResult.success || cliResult.errors !== 'Clarinet CLI not available') {
+    console.log('CLI validation result:', cliResult.success ? 'success' : 'failure');
+    return cliResult;
+  }
+  
+  // 3. Fallback to Hiro API
+  console.log('Attempting validation with Hiro API');
+  const apiResult = await validateWithHiroAPI(contractCode);
+  console.log('API validation result:', apiResult.success ? 'success' : 'failure');
+  return apiResult;
 }
 
 /**
@@ -140,6 +282,15 @@ export async function validateProjectWithClarinet(projectPath: string): Promise<
   try {
     // Setup Clarinet CLI
     const clarinetPath = await setupClarinetCLI();
+    
+    // If CLI is not available, return failure
+    if (!clarinetPath) {
+      return {
+        success: false,
+        output: '',
+        errors: 'Clarinet CLI not available'
+      };
+    }
     
     // Run clarinet check command
     try {
@@ -168,7 +319,7 @@ export async function validateProjectWithClarinet(projectPath: string): Promise<
     return {
       success: false,
       output: '',
-      errors: `Validation failed: ${error.message}. This may be due to Clarinet CLI not being available in this environment.`
+      errors: `Validation failed: ${error.message}`
     };
   }
 }
@@ -180,8 +331,7 @@ export async function validateProjectWithClarinet(projectPath: string): Promise<
 export async function isClarinetInstalled(): Promise<boolean> {
   try {
     const clarinetPath = await setupClarinetCLI();
-    await execPromise(`${clarinetPath} --version`, { timeout: 5000 });
-    return true;
+    return !!clarinetPath;
   } catch (error) {
     return false;
   }

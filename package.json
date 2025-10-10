@@ -76,6 +76,7 @@
     "zod": "3.25.67"
   },
   "devDependencies": {
+    "@hirosystems/clarinet-sdk": "^3.8.0",
     "@tailwindcss/postcss": "^4.1.9",
     "@types/node": "^22",
     "@types/react": "^19",
