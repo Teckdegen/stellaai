@@ -1,18 +1,7 @@
 import { NextRequest } from "next/server"
-import { GoogleGenerativeAI } from "@google/generative-ai"
 
 // Get API key from environment variable or source code
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "your-gemini-api-key-here"
-
-// Log API key status for debugging
-console.log("Gemini API Key configured:", !!GEMINI_API_KEY && GEMINI_API_KEY !== "your-gemini-api-key-here")
-
-// Check if API key is configured
-if (!GEMINI_API_KEY || GEMINI_API_KEY === "your-gemini-api-key-here") {
-  console.error("Gemini API key not configured")
-}
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
 
 export async function POST(req: NextRequest) {
   // Check if API key is configured
@@ -70,49 +59,46 @@ Key Clarity Development Principles:
 - Follow security best practices`
 
     // Prepare messages for the API
-    const chatHistory = messages.map((msg: any) => ({
-      role: msg.role === "user" ? "user" : "model",
-      parts: [{ text: msg.content }],
-    }))
+    const apiMessages = [
+      { role: "user", parts: [{ text: systemPrompt }] },
+      ...messages.map((msg: any) => ({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }],
+      })),
+    ]
 
     console.log("Sending request to Gemini API with", messages.length, "messages")
     
-    // Initialize the model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
+    // Call Gemini API directly using fetch
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: apiMessages,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+          },
+        }),
+      }
+    )
 
-    // Start a chat session
-    const chat = model.startChat({
-      history: chatHistory,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 2048,
-      },
-    })
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Gemini API error: ${response.status} ${response.statusText} - ${errorText}`)
+    }
 
-    // Get the last user message
-    const lastUserMessage = messages[messages.length - 1]?.content || "Generate Clarity code"
-
-    // Send the message
-    const result = await chat.sendMessageStream(lastUserMessage)
-
-    console.log("Received response from Gemini API")
+    const data = await response.json()
     
-    // Create a ReadableStream from the response
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of result.stream) {
-            const chunkText = chunk.text()
-            controller.enqueue(new TextEncoder().encode(chunkText))
-          }
-          controller.close()
-        } catch (error) {
-          controller.error(error)
-        }
-      },
-    })
-
-    return new Response(stream, {
+    // Extract the response text
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated"
+    
+    // Create a simple text response
+    return new Response(responseText, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
       },
