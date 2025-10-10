@@ -87,15 +87,25 @@ Key Clarity Development Principles:
       }
     )
 
+    // Check if response is OK before parsing
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`Gemini API error: ${response.status} ${response.statusText} - ${errorText}`)
+      console.error("[v0] Gemini API Error Response:", errorText)
+      throw new Error("Gemini API error: " + response.status + " " + response.statusText + " - " + errorText)
     }
 
     const data = await response.json()
     
-    // Extract the response text
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated"
+    // Extract the response text with better error handling
+    let responseText = "No response generated"
+    if (data.candidates && data.candidates.length > 0) {
+      const candidate = data.candidates[0]
+      if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+        responseText = candidate.content.parts[0].text || responseText
+      }
+    } else if (data.error) {
+      throw new Error("Gemini API error: " + (data.error.message || JSON.stringify(data.error)))
+    }
     
     // Create a simple text response
     return new Response(responseText, {

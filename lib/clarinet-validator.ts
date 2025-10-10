@@ -207,7 +207,28 @@ async function validateWithHiroAPI(contractCode: string): Promise<{
       }),
     });
 
-    const result = await response.json();
+    // Check if response is OK before parsing JSON
+    if (!response.ok) {
+      const errorText = await response.text();
+      return {
+        success: false,
+        output: '',
+        errors: `Hiro API validation failed: ${response.status} ${response.statusText} - ${errorText}`
+      };
+    }
+
+    // Try to parse JSON, but handle cases where it's not valid JSON
+    let result: any;
+    try {
+      result = await response.json();
+    } catch (parseError) {
+      const errorText = await response.text();
+      return {
+        success: false,
+        output: '',
+        errors: `Hiro API validation failed: Invalid JSON response - ${errorText.substring(0, 200)}`
+      };
+    }
 
     if (result.result === 'success') {
       return {
