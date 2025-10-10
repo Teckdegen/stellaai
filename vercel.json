@@ -1,19 +1,4 @@
 {
-  "builds": [
-    {
-      "src": "scripts/install-clarinet.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "scripts/**",
-          "lib/**",
-          "components/**",
-          "app/**",
-          "!**/node_modules/**"
-        ]
-      }
-    }
-  ],
   "buildCommand": "node scripts/install-clarinet.cjs && pnpm build",
   "outputDirectory": ".next",
   "installCommand": "corepack enable && pnpm install --no-frozen-lockfile",
