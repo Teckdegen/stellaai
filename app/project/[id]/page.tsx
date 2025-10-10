@@ -8,7 +8,7 @@ import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircl
 import { ChatPanel } from "@/components/chat-panel"
 import { CodeEditor } from "@/components/code-editor"
 import { ConsolePanel } from "@/components/console-panel"
-import { validateClarityCode } from "@/lib/clarity-validator"
+// Removed built-in validator import
 import { ProjectStorage, type Project } from "@/lib/project-storage"
 import { deployContractWithPrivateKey } from "@/lib/stacks-wallet"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -72,51 +72,10 @@ export default function ProjectPage() {
     })
 
     if (reason) {
-      setConsoleMessages((prev) => [...prev, { type: "info", message: reason, timestamp }])
+      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [...prev, { type: "info", message: reason, timestamp }])
     }
 
-    // Built-in validation
-    const validation = validateClarityCode(newCode)
-
-    // Display errors
-    if (!validation.isValid) {
-      validation.errors.forEach((error) => {
-        setConsoleMessages((prev) => [
-          ...prev,
-          {
-            type: "error",
-            message: `Line ${error.line}: ${error.message}`,
-            timestamp,
-          },
-        ])
-      })
-    }
-
-    // Display warnings
-    if (validation.warnings.length > 0) {
-      validation.warnings.forEach((warning) => {
-        setConsoleMessages((prev) => [
-          ...prev,
-          {
-            type: "warning",
-            message: `Warning Line ${warning.line}: ${warning.message}`,
-            timestamp,
-          },
-        ])
-      })
-    }
-
-    // Display success message only if valid and has content
-    if (validation.isValid && newCode.trim()) {
-      setConsoleMessages((prev) => [
-        ...prev,
-        {
-          type: "success",
-          message: "Code validation passed",
-          timestamp,
-        },
-      ])
-    }
+    // Remove the built-in validation - only use Clarinet validation
   }
 
   const handleCodeChange = (newCode: string) => {
@@ -137,7 +96,7 @@ export default function ProjectPage() {
     })
 
     setIsValidating(true)
-    setConsoleMessages((prev) => [
+    setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
       ...prev,
       { type: "info", message: "Running Clarinet validation...", timestamp },
     ])
@@ -164,13 +123,13 @@ export default function ProjectPage() {
       })
 
       if (result.success) {
-        setConsoleMessages((prev) => [
+        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
           ...prev,
           { type: "success", message: "Clarinet validation passed", timestamp: resultTimestamp },
           { type: "info", message: result.output, timestamp: resultTimestamp },
         ])
       } else {
-        setConsoleMessages((prev) => [
+        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
           ...prev,
           { type: "error", message: `Clarinet validation failed: ${result.errors}`, timestamp: resultTimestamp },
         ])
@@ -182,7 +141,7 @@ export default function ProjectPage() {
         minute: "2-digit",
         second: "2-digit",
       })
-      setConsoleMessages((prev) => [
+      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
         ...prev,
         {
           type: "error",
@@ -204,7 +163,7 @@ export default function ProjectPage() {
         minute: "2-digit",
         second: "2-digit",
       })
-      setConsoleMessages((prev) => [
+      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
         ...prev,
         { type: "error", message: "Project data not loaded", timestamp },
       ])
@@ -218,27 +177,10 @@ export default function ProjectPage() {
       second: "2-digit",
     })
 
-    // Validate with both validators before deployment
-    const builtinValidation = validateClarityCode(clarCode)
-    if (!builtinValidation.isValid) {
-      setConsoleMessages((prev) => [
-        ...prev,
-        { type: "error", message: "Cannot deploy: Code has validation errors", timestamp },
-      ])
-      return
-    }
-    
-    // Display warnings before deployment
-    if (builtinValidation.warnings.length > 0) {
-      setConsoleMessages((prev) => [
-        ...prev,
-        { type: "info", message: `Code has ${builtinValidation.warnings.length} warning(s). Review before deploying.`, timestamp },
-      ])
-    }
-
+    // Remove built-in validation - only use Clarinet validation
     // Add safety check for clarCode
     if (!clarCode || !clarCode.trim()) {
-      setConsoleMessages((prev) => [
+      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
         ...prev,
         { type: "error", message: "Cannot deploy: No code to deploy", timestamp },
       ])
@@ -261,7 +203,7 @@ export default function ProjectPage() {
 
     setIsDeploying(true)
     setShowPrivateKeyDialog(false)
-    setConsoleMessages((prev) => [
+    setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
       ...prev,
       { type: "info", message: "Initiating deployment to Stacks blockchain...", timestamp },
       { type: "info", message: `Network: ${project.network}`, timestamp },
@@ -270,6 +212,61 @@ export default function ProjectPage() {
     // Add safety checks for required project properties
     const contractName = project.contractName || "unnamed-contract"
     const network = project.network || "testnet"
+
+    // Run validation before deployment and show all results
+    try {
+      const validationResponse = await fetch("/api/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contractCode: clarCode,
+          contractName: contractName,
+        }),
+      })
+
+      const validationResult = await validationResponse.json()
+      const validationTimestamp = new Date().toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+
+      // Always show validation results, even if successful
+      if (validationResult.success) {
+        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+          ...prev,
+          { type: "success", message: "Clarinet validation passed", timestamp: validationTimestamp },
+          { type: "info", message: validationResult.output, timestamp: validationTimestamp },
+        ])
+      } else {
+        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+          ...prev,
+          { type: "error", message: `Clarinet validation failed: ${validationResult.errors}`, timestamp: validationTimestamp },
+        ])
+        // If validation failed, stop deployment
+        setIsDeploying(false)
+        return
+      }
+    } catch (validationError) {
+      const errorTimestamp = new Date().toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+      setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
+        ...prev,
+        {
+          type: "error",
+          message: "Failed to run Clarinet validation. Make sure Clarinet CLI is installed.",
+          timestamp: errorTimestamp,
+        },
+      ])
+      // Continue with deployment even if validation fails
+    }
 
     await deployContractWithPrivateKey(
       contractName,
@@ -283,7 +280,7 @@ export default function ProjectPage() {
           minute: "2-digit",
           second: "2-digit",
         })
-        setConsoleMessages((prev) => [
+        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
           ...prev,
           { type: "success", message: `Deployment successful!`, timestamp: successTimestamp },
           { type: "info", message: `Transaction ID: ${txId}`, timestamp: successTimestamp },
@@ -304,7 +301,7 @@ export default function ProjectPage() {
           minute: "2-digit",
           second: "2-digit",
         })
-        setConsoleMessages((prev) => [
+        setConsoleMessages((prev: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => [
           ...prev,
           { type: "error", message: `Deployment failed: ${error}`, timestamp: errorTimestamp },
         ])
