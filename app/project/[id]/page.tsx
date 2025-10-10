@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircle, AlertCircle, Send, Wifi, Info, Terminal } from "lucide-react"
+import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircle, AlertCircle, Send, Wifi, Info, Terminal, Shield } from "lucide-react"
 import { ChatPanel } from "@/components/chat-panel"
 import { CodeEditor } from "@/components/code-editor"
 import { ConsolePanel } from "@/components/console-panel"
@@ -75,100 +75,47 @@ export default function ProjectPage() {
       setConsoleMessages((prev) => [...prev, { type: "info", message: reason, timestamp }])
     }
 
-    // Validate code with both built-in validator and Clarinet CLI
-    setIsValidating(true)
-    try {
-      // Built-in validation
-      const validation = validateClarityCode(newCode)
+    // Built-in validation
+    const validation = validateClarityCode(newCode)
 
-      // Display errors
-      if (!validation.isValid) {
-        validation.errors.forEach((error) => {
-          setConsoleMessages((prev) => [
-            ...prev,
-            {
-              type: "error",
-              message: `Line ${error.line}: ${error.message}`,
-              timestamp,
-            },
-          ])
-        })
-      }
-
-      // Display warnings
-      if (validation.warnings.length > 0) {
-        validation.warnings.forEach((warning) => {
-          setConsoleMessages((prev) => [
-            ...prev,
-            {
-              type: "warning",
-              message: `Warning Line ${warning.line}: ${warning.message}`,
-              timestamp,
-            },
-          ])
-        })
-      }
-
-      // Display success message only if valid and has content
-      if (validation.isValid && newCode.trim()) {
+    // Display errors
+    if (!validation.isValid) {
+      validation.errors.forEach((error) => {
         setConsoleMessages((prev) => [
           ...prev,
           {
-            type: "success",
-            message: "Code validation passed",
+            type: "error",
+            message: `Line ${error.line}: ${error.message}`,
             timestamp,
           },
         ])
-      }
+      })
+    }
 
-      // Clarinet CLI validation
-      if (project && newCode.trim()) {
-        try {
-          const response = await fetch("/api/validate", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              contractCode: newCode,
-              contractName: project.contractName,
-            }),
-          })
+    // Display warnings
+    if (validation.warnings.length > 0) {
+      validation.warnings.forEach((warning) => {
+        setConsoleMessages((prev) => [
+          ...prev,
+          {
+            type: "warning",
+            message: `Warning Line ${warning.line}: ${warning.message}`,
+            timestamp,
+          },
+        ])
+      })
+    }
 
-          const result = await response.json()
-
-          if (result.success) {
-            setConsoleMessages((prev) => [
-              ...prev,
-              {
-                type: "success",
-                message: "Clarinet validation passed",
-                timestamp,
-              },
-            ])
-          } else {
-            setConsoleMessages((prev) => [
-              ...prev,
-              {
-                type: "error",
-                message: `Clarinet validation failed: ${result.errors}`,
-                timestamp,
-              },
-            ])
-          }
-        } catch (error) {
-          setConsoleMessages((prev) => [
-            ...prev,
-            {
-              type: "warning",
-              message: "Could not validate with Clarinet CLI. Make sure it's installed.",
-              timestamp,
-            },
-          ])
-        }
-      }
-    } finally {
-      setIsValidating(false)
+    // Display success message only if valid and has content
+    if (validation.isValid && newCode.trim()) {
+      setConsoleMessages((prev) => [
+        ...prev,
+        {
+          type: "success",
+          message: "Code validation passed",
+          timestamp,
+        },
+      ])
     }
   }
 
@@ -176,6 +123,75 @@ export default function ProjectPage() {
     setClarCode(newCode)
     if (project) {
       ProjectStorage.updateProjectCode(project.id, newCode)
+    }
+  }
+
+  const handleValidate = async () => {
+    if (!project) return
+
+    const timestamp = new Date().toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+
+    setIsValidating(true)
+    setConsoleMessages((prev) => [
+      ...prev,
+      { type: "info", message: "Running Clarinet validation...", timestamp },
+    ])
+
+    try {
+      const response = await fetch("/api/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contractCode: clarCode,
+          contractName: project.contractName,
+        }),
+      })
+
+      const result = await response.json()
+
+      const resultTimestamp = new Date().toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+
+      if (result.success) {
+        setConsoleMessages((prev) => [
+          ...prev,
+          { type: "success", message: "Clarinet validation passed", timestamp: resultTimestamp },
+          { type: "info", message: result.output, timestamp: resultTimestamp },
+        ])
+      } else {
+        setConsoleMessages((prev) => [
+          ...prev,
+          { type: "error", message: `Clarinet validation failed: ${result.errors}`, timestamp: resultTimestamp },
+        ])
+      }
+    } catch (error) {
+      const errorTimestamp = new Date().toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+      setConsoleMessages((prev) => [
+        ...prev,
+        {
+          type: "error",
+          message: "Failed to run Clarinet validation. Make sure Clarinet CLI is installed.",
+          timestamp: errorTimestamp,
+        },
+      ])
+    } finally {
+      setIsValidating(false)
     }
   }
 
@@ -359,6 +375,24 @@ export default function ProjectPage() {
         <div className="flex items-center gap-3">
           <Button
             size="sm"
+            onClick={handleValidate}
+            disabled={isValidating || !clarCode.trim()}
+            className="hidden sm:flex rounded-full px-4 bg-white/10 text-white border border-white/20 hover:bg-white/20"
+          >
+            {isValidating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Validating...
+              </>
+            ) : (
+              <>
+                <Shield className="w-4 h-4 mr-2" />
+                Validate
+              </>
+            )}
+          </Button>
+          <Button
+            size="sm"
             onClick={handleDeploy}
             disabled={isDeploying || !clarCode.trim()}
             className="hidden sm:flex rounded-full px-4 bg-white text-black hover:bg-gray-200"
@@ -375,14 +409,24 @@ export default function ProjectPage() {
               </>
             )}
           </Button>
-          <Button 
-            size="icon" 
-            onClick={handleDeploy} 
-            disabled={isDeploying || !clarCode.trim()} 
-            className="sm:hidden rounded-full bg-white text-black hover:bg-gray-200"
-          >
-            {isDeploying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-          </Button>
+          <div className="flex gap-2 sm:hidden">
+            <Button 
+              size="icon" 
+              onClick={handleValidate} 
+              disabled={isValidating || !clarCode.trim()} 
+              className="rounded-full bg-white/10 text-white border border-white/20 hover:bg-white/20"
+            >
+              {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+            </Button>
+            <Button 
+              size="icon" 
+              onClick={handleDeploy} 
+              disabled={isDeploying || !clarCode.trim()} 
+              className="rounded-full bg-white text-black hover:bg-gray-200"
+            >
+              {isDeploying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            </Button>
+          </div>
         </div>
       </header>
 
