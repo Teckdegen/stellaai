@@ -106,6 +106,10 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
         // Parse output to extract errors
         const errors: Array<{ line: number; message: string }> = [];
         
+        // Log the raw output for debugging
+        console.log("[Validation API] Raw stdout:", stdout);
+        console.log("[Validation API] Raw stderr:", stderr);
+        
         // Always parse output to extract all errors/warnings, even if validation passes
         const output = stderr || stdout;
         if (output) {
@@ -115,61 +119,7 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
             // Skip empty lines
             if (!line.trim()) continue;
             
-            // Look for error patterns in Clarinet output
-            if (line.includes("error:") || line.includes("Error:") || line.includes("failed:") || line.includes("Error")) {
-              // Extract file, line, and column information from Clarinet output
-              // Pattern: file:line:column: error: message
-              const locationMatch = line.match(/[^:]+:(\d+):(\d+):\s*(.*)/);
-              if (locationMatch) {
-                const lineNum = parseInt(locationMatch[1]) || 1;
-                const message = locationMatch[3] ? locationMatch[3].trim() : line.trim();
-                errors.push({ line: lineNum, message });
-              } else {
-                // Fallback: try to extract line number from any number in the line
-                const lineMatch = line.match(/(\d+)/);
-                const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
-                errors.push({ line: lineNum, message: line.trim() });
-              }
-            }
-            // Also capture warnings
-            else if (line.includes("warning:") || line.includes("Warning:")) {
-              const locationMatch = line.match(/[^:]+:(\d+):(\d+):\s*(.*)/);
-              if (locationMatch) {
-                const lineNum = parseInt(locationMatch[1]) || 1;
-                const message = locationMatch[3] ? locationMatch[3].trim() : line.trim();
-                errors.push({ line: lineNum, message: `Warning: ${message}` });
-              } else {
-                const lineMatch = line.match(/(\d+)/);
-                const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
-                errors.push({ line: lineNum, message: `Warning: ${line.trim()}` });
-              }
-            }
-          }
-          
-          // If no structured errors found but there's output, add it as a general message
-          if (errors.length === 0 && output.trim()) {
-            errors.push({ line: 1, message: output.trim() });
-          }
-        }
-
-        // Consider validation successful if there are no errors in stderr
-        const success = !stderr || stderr.trim() === "";
-
-        return Response.json({
-          success: success,
-          errors: errors,
-          output: stdout || "Contract validation completed"
-        });
-      } catch (error: any) {
-        // Validation failed - parse errors
-        const errors: Array<{ line: number; message: string }> = [];
-        const output = error.stdout || error.stderr || error.message;
-        
-        if (output) {
-          const lines = output.split('\n');
-          for (const line of lines) {
-            // Skip empty lines
-            if (!line.trim()) continue;
+            console.log("[Validation API] Processing line:", line);
             
             // Look for error patterns in Clarinet output
             if (line.includes("error:") || line.includes("Error:") || line.includes("failed:") || line.includes("Error")) {
@@ -180,11 +130,22 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
                 const lineNum = parseInt(locationMatch[1]) || 1;
                 const message = locationMatch[3] ? locationMatch[3].trim() : line.trim();
                 errors.push({ line: lineNum, message });
+                console.log("[Validation API] Parsed error with location:", { line: lineNum, message });
               } else {
-                // Fallback: try to extract line number from any number in the line
-                const lineMatch = line.match(/(\d+)/);
-                const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
-                errors.push({ line: lineNum, message: line.trim() });
+                // Try a more general pattern for file:line:column
+                const generalMatch = line.match(/([^:]+):(\d+):(\d+):?\s*(.*)/);
+                if (generalMatch) {
+                  const lineNum = parseInt(generalMatch[2]) || 1;
+                  const message = generalMatch[4] ? generalMatch[4].trim() : line.trim();
+                  errors.push({ line: lineNum, message });
+                  console.log("[Validation API] Parsed general error:", { line: lineNum, message });
+                } else {
+                  // Fallback: try to extract line number from any number in the line
+                  const lineMatch = line.match(/(\d+)/);
+                  const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
+                  errors.push({ line: lineNum, message: line.trim() });
+                  console.log("[Validation API] Parsed fallback error:", { line: lineNum, message: line.trim() });
+                }
               }
             }
             // Also capture warnings
@@ -194,10 +155,89 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
                 const lineNum = parseInt(locationMatch[1]) || 1;
                 const message = locationMatch[3] ? locationMatch[3].trim() : line.trim();
                 errors.push({ line: lineNum, message: `Warning: ${message}` });
+                console.log("[Validation API] Parsed warning with location:", { line: lineNum, message });
               } else {
                 const lineMatch = line.match(/(\d+)/);
                 const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
                 errors.push({ line: lineNum, message: `Warning: ${line.trim()}` });
+                console.log("[Validation API] Parsed warning fallback:", { line: lineNum, message: `Warning: ${line.trim()}` });
+              }
+            }
+          }
+          
+          // If no structured errors found but there's output, add it as a general message
+          if (errors.length === 0 && output.trim()) {
+            errors.push({ line: 1, message: output.trim() });
+            console.log("[Validation API] Added raw output as error:", output.trim());
+          }
+        }
+
+        // Consider validation successful if there are no errors in stderr
+        const success = !stderr || stderr.trim() === "";
+        console.log("[Validation API] Validation result:", { success, errorCount: errors.length });
+
+        return Response.json({
+          success: success,
+          errors: errors,
+          output: stdout || "Contract validation completed"
+        });
+      } catch (error: any) {
+        console.error("[Validation API] Clarinet execution error:", error);
+        
+        // Validation failed - parse errors
+        const errors: Array<{ line: number; message: string }> = [];
+        const output = error.stdout || error.stderr || error.message;
+        
+        console.log("[Validation API] Error output:", output);
+        
+        if (output) {
+          const lines = output.split('\n');
+          for (const line of lines) {
+            // Skip empty lines
+            if (!line.trim()) continue;
+            
+            console.log("[Validation API] Processing error line:", line);
+            
+            // Look for error patterns in Clarinet output
+            if (line.includes("error:") || line.includes("Error:") || line.includes("failed:") || line.includes("Error")) {
+              // Extract file, line, and column information from Clarinet output
+              // Pattern: file:line:column: error: message
+              const locationMatch = line.match(/[^:]+:(\d+):(\d+):\s*(.*)/);
+              if (locationMatch) {
+                const lineNum = parseInt(locationMatch[1]) || 1;
+                const message = locationMatch[3] ? locationMatch[3].trim() : line.trim();
+                errors.push({ line: lineNum, message: message });
+                console.log("[Validation API] Parsed error with location:", { line: lineNum, message: message });
+              } else {
+                // Try a more general pattern for file:line:column
+                const generalMatch = line.match(/([^:]+):(\d+):(\d+):?\s*(.*)/);
+                if (generalMatch) {
+                  const lineNum = parseInt(generalMatch[2]) || 1;
+                  const message = generalMatch[4] ? generalMatch[4].trim() : line.trim();
+                  errors.push({ line: lineNum, message: message });
+                  console.log("[Validation API] Parsed general error:", { line: lineNum, message: message });
+                } else {
+                  // Fallback: try to extract line number from any number in the line
+                  const lineMatch = line.match(/(\d+)/);
+                  const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
+                  errors.push({ line: lineNum, message: line.trim() });
+                  console.log("[Validation API] Parsed fallback error:", { line: lineNum, message: line.trim() });
+                }
+              }
+            }
+            // Also capture warnings
+            else if (line.includes("warning:") || line.includes("Warning:")) {
+              const locationMatch = line.match(/[^:]+:(\d+):(\d+):\s*(.*)/);
+              if (locationMatch) {
+                const lineNum = parseInt(locationMatch[1]) || 1;
+                const message = locationMatch[3] ? locationMatch[3].trim() : line.trim();
+                errors.push({ line: lineNum, message: `Warning: ${message}` });
+                console.log("[Validation API] Parsed warning with location:", { line: lineNum, message: `Warning: ${message}` });
+              } else {
+                const lineMatch = line.match(/(\d+)/);
+                const lineNum = lineMatch ? parseInt(lineMatch[1]) : 1;
+                errors.push({ line: lineNum, message: `Warning: ${line.trim()}` });
+                console.log("[Validation API] Parsed warning fallback:", { line: lineNum, message: `Warning: ${line.trim()}` });
               }
             }
           }
@@ -205,9 +245,11 @@ ${contractName} = { path = "contracts/${contractName}.clar" }
           // If no structured errors found, add the whole output as one error
           if (errors.length === 0) {
             errors.push({ line: 1, message: output });
+            console.log("[Validation API] Added full error output:", output);
           }
         } else {
           errors.push({ line: 1, message: "Unknown validation error" });
+          console.log("[Validation API] Added unknown error");
         }
 
         return Response.json({
