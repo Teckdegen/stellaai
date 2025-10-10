@@ -1,13 +1,7 @@
 import { NextRequest } from "next/server"
-import { Groq } from "groq-sdk"
 
 // Get API key from environment variable or source code
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "your-groq-api-key-here"
-
-// Log API key status for debugging
-console.log("Groq API Key configured:", !!GROQ_API_KEY && GROQ_API_KEY !== "your-groq-api-key-here")
-
-const groq = new Groq({ apiKey: GROQ_API_KEY })
 
 export async function POST(req: NextRequest) {
   // Check if API key is configured
@@ -75,19 +69,37 @@ Key Clarity Development Principles:
 
     console.log("Sending request to Groq API with", apiMessages.length, "messages")
     
-    // Call Groq API
-    const completion = await groq.chat.completions.create({
-      messages: apiMessages,
-      model: "llama-3.3-70b-versatile",
-      stream: true,
-      temperature: 0.7,
-      max_tokens: 2048,
-    })
+    // Call Groq API directly using fetch
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${GROQ_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: apiMessages,
+          model: "llama-3.3-70b-versatile",
+          temperature: 0.7,
+          max_tokens: 2048,
+          stream: false,
+        }),
+      }
+    )
 
-    console.log("Received response from Groq API")
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Groq API error: ${response.status} ${response.statusText} - ${errorText}`)
+    }
+
+    const data = await response.json()
     
-    // Return a streaming response
-    return new Response(completion.toReadableStream(), {
+    // Extract the response text
+    const responseText = data.choices?.[0]?.message?.content || "No response generated"
+    
+    // Create a simple text response
+    return new Response(responseText, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
       },
