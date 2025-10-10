@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircle, AlertCircle, Send, Wifi, Info, Terminal, Shield } from "lucide-react"
+import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircle, AlertCircle, Send, Wifi, Info, Terminal, Shield, Edit3 } from "lucide-react"
 import { ChatPanel } from "@/components/chat-panel"
 import { CodeEditor } from "@/components/code-editor"
 import { ConsolePanel } from "@/components/console-panel"
@@ -30,6 +30,8 @@ export default function ProjectPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showPrivateKeyDialog, setShowPrivateKeyDialog] = useState(false)
   const [privateKey, setPrivateKey] = useState("")
+  const [showRenameDialog, setShowRenameDialog] = useState(false)
+  const [newContractName, setNewContractName] = useState("")
 
   useEffect(() => {
     const projectId = params.id as string
@@ -38,6 +40,7 @@ export default function ProjectPage() {
     if (proj) {
       setProject(proj)
       setClarCode(proj.clarFile || "")
+      setNewContractName(proj.contractName) // Initialize with current name
 
       const timestamp = new Date().toLocaleTimeString("en-US", {
         hour12: false,
@@ -84,7 +87,7 @@ export default function ProjectPage() {
         },
         body: JSON.stringify({
           contractCode: newCode,
-          contractName: project?.contractName || "unnamed-contract",
+          contractName: project?.contractName || "unnamed-contract", // Use updated project name
         }),
       })
 
@@ -142,7 +145,7 @@ export default function ProjectPage() {
         },
         body: JSON.stringify({
           contractCode: clarCode,
-          contractName: project.contractName,
+          contractName: project.contractName, // Use current project name
         }),
       })
 
@@ -269,7 +272,7 @@ export default function ProjectPage() {
     ])
 
     // Add safety checks for required project properties
-    const contractName = project.contractName || "unnamed-contract"
+    const contractName = project.contractName || "unnamed-contract" // Use current project name
     const network = project.network || "testnet"
 
     // Run validation before deployment and show all results
@@ -281,7 +284,7 @@ export default function ProjectPage() {
         },
         body: JSON.stringify({
           contractCode: clarCode,
-          contractName: contractName,
+          contractName: contractName, // Use current contract name
         }),
       })
 
@@ -352,7 +355,7 @@ export default function ProjectPage() {
     }
 
     await deployContractWithPrivateKey(
-      contractName,
+      contractName, // Use current contract name
       clarCode,
       network,
       privateKey,
@@ -397,6 +400,34 @@ export default function ProjectPage() {
     setConsoleMessages([])
   }
 
+  const handleRenameProject = () => {
+    if (!project || !newContractName.trim()) return
+
+    // Update project with new name
+    const updatedProject = {
+      ...project,
+      contractName: newContractName.trim(),
+      updatedAt: new Date().toISOString()
+    }
+
+    ProjectStorage.saveProject(updatedProject)
+    setProject(updatedProject)
+
+    // Add message to console
+    const timestamp = new Date().toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+    setConsoleMessages((prev) => [
+      ...prev,
+      { type: "success", message: `Contract renamed to: ${newContractName.trim()}`, timestamp },
+    ])
+
+    setShowRenameDialog(false)
+  }
+
   if (!project) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -410,6 +441,13 @@ export default function ProjectPage() {
 
   const explorerUrl = deployedTxId ? `https://explorer.stacks.co/txid/${deployedTxId}?chain=${project.network}` : null
   const fileName = `${project.contractName}.clar`
+
+  // Update the useEffect to refresh when project changes
+  useEffect(() => {
+    if (project) {
+      setNewContractName(project.contractName)
+    }
+  }, [project])
 
   return (
     <div className="h-screen bg-black flex flex-col overflow-hidden">
@@ -428,7 +466,7 @@ export default function ProjectPage() {
                 projectId={project.id}
                 onCodeUpdate={handleCodeUpdate}
                 currentCode={clarCode}
-                contractName={project.contractName}
+                contractName={project.contractName} // Use current project name
                 network={project.network}
               />
             </SheetContent>
@@ -443,7 +481,20 @@ export default function ProjectPage() {
               <Code className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="font-semibold text-base text-white">{project.contractName}.clar</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="font-semibold text-base text-white">{project.contractName}.clar</h1>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full text-gray-400 hover:text-white hover:bg-white/10 h-6 w-6"
+                  onClick={() => {
+                    setNewContractName(project.contractName)
+                    setShowRenameDialog(true)
+                  }}
+                >
+                  <Edit3 className="w-3 h-3" />
+                </Button>
+              </div>
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <Network className="w-3 h-3" />
                 <span className="capitalize">{project.network}</span>
@@ -533,6 +584,45 @@ export default function ProjectPage() {
           </Panel>
         </PanelGroup>
       </div>
+
+      {/* Rename Dialog */}
+      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+        <DialogContent className="sm:max-w-md bg-black border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit3 className="w-5 h-5" />
+              <span>Rename Contract</span>
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Enter a new name for your contract. This will update the contract name used during deployment.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="contractName" className="text-sm font-medium text-white">Contract Name</label>
+              <Input
+                id="contractName"
+                value={newContractName}
+                onChange={(e) => setNewContractName(e.target.value)}
+                placeholder="Enter contract name"
+                className="mt-1 bg-black border-white/20 text-white"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowRenameDialog(false)} className="rounded-full bg-black border-white/20 text-white hover:bg-white/10">
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleRenameProject} 
+                disabled={!newContractName.trim() || newContractName.trim() === project?.contractName}
+                className="rounded-full bg-white text-black hover:bg-gray-200"
+              >
+                Rename
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Private Key Dialog */}
       <Dialog open={showPrivateKeyDialog} onOpenChange={setShowPrivateKeyDialog}>
