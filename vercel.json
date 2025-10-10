@@ -3,6 +3,5 @@
   "buildCommand": "pnpm build",
   "framework": "nextjs",
   "regions": ["iad1"],
-  "installCommand": "pnpm install",
-  "nodeVersion": "18.x"
+  "installCommand": "pnpm install"
 }
