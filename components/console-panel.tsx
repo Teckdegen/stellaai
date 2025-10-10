@@ -2,7 +2,7 @@
 
 import { ScrollablePanel } from "@/components/ui/scrollable-panel"
 import { Button } from "@/components/ui/button"
-import { Terminal, Info, AlertCircle, CheckCircle, Trash2, AlertTriangle } from "lucide-react"
+import { Terminal, Info, AlertCircle, CheckCircle, Trash2, AlertTriangle, Play } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
 interface ConsoleMessage {
@@ -14,9 +14,12 @@ interface ConsoleMessage {
 interface ConsolePanelProps {
   messages: ConsoleMessage[]
   onClear?: () => void
+  onValidate?: () => void
+  isValidating?: boolean
+  hasCode?: boolean
 }
 
-export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
+export function ConsolePanel({ messages, onClear, onValidate, isValidating, hasCode }: ConsolePanelProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [autoScroll, setAutoScroll] = useState(true)
   const [userScrolled, setUserScrolled] = useState(false)
@@ -74,6 +77,26 @@ export function ConsolePanel({ messages, onClear }: ConsolePanelProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {onValidate && (
+            <Button
+              size="sm"
+              onClick={onValidate}
+              disabled={isValidating || !hasCode}
+              className="rounded-full h-8 px-3 text-xs bg-white text-black hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isValidating ? (
+                <>
+                  <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
+                  Validating...
+                </>
+              ) : (
+                <>
+                  <Play className="w-3 h-3 mr-1" />
+                  Validate
+                </>
+              )}
+            </Button>
+          )}
           {userScrolled && (
             <Button 
               variant="ghost" 

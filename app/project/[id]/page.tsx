@@ -373,44 +373,24 @@ export default function ProjectPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              onClick={handleValidate}
-              disabled={isValidating || !clarCode.trim()}
-              className="flex items-center gap-2 rounded-full px-4 bg-white/10 text-white border border-white/20 hover:bg-white/20"
-            >
-              {isValidating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Validating...
-                </>
-              ) : (
-                <>
-                  <Shield className="w-4 h-4" />
-                  <span className="hidden sm:inline">Validate</span>
-                </>
-              )}
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleDeploy}
-              disabled={isDeploying || !clarCode.trim()}
-              className="flex items-center gap-2 rounded-full px-4 bg-white text-black hover:bg-gray-200"
-            >
-              {isDeploying ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Deploying...
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4" />
-                  <span className="hidden sm:inline">Deploy</span>
-                </>
-              )}
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            onClick={handleDeploy}
+            disabled={isDeploying || !clarCode.trim()}
+            className="flex items-center gap-2 rounded-full px-4 bg-white text-black hover:bg-gray-200"
+          >
+            {isDeploying ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Deploying...
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                <span className="hidden sm:inline">Deploy Contract</span>
+              </>
+            )}
+          </Button>
         </div>
       </header>
 
@@ -460,7 +440,13 @@ export default function ProjectPage() {
                 className="bg-black relative overflow-hidden"
               >
                 <div className="h-full">
-                  <ConsolePanel messages={consoleMessages} onClear={handleClearConsole} />
+                  <ConsolePanel 
+                    messages={consoleMessages} 
+                    onClear={handleClearConsole} 
+                    onValidate={handleValidate}
+                    isValidating={isValidating}
+                    hasCode={!!clarCode.trim()}
+                  />
                 </div>
               </Panel>
             </PanelGroup>
