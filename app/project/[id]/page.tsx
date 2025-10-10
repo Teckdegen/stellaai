@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import Image from "next/image"
+
+// Extend window interface to include ethereum property
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
 
 export default function ProjectPage() {
   const params = useParams()
@@ -32,50 +39,47 @@ export default function ProjectPage() {
   const [privateKey, setPrivateKey] = useState("")
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [newContractName, setNewContractName] = useState("")
-  const hasInitialized = useRef(false)
+
+  // Handle Ethereum wallet conflicts
+  const handleEthereumConflicts = () => {
+    try {
+      // Check if ethereum is already defined and is not writable
+      if (typeof window !== 'undefined' && window.ethereum) {
+        const descriptor = Object.getOwnPropertyDescriptor(window, 'ethereum');
+        if (descriptor && !descriptor.writable && !descriptor.configurable) {
+          console.warn('Ethereum property is not configurable, conflicts may occur');
+        }
+      }
+    } catch (error) {
+      console.warn('Error checking ethereum property:', error);
+    }
+  };
 
   useEffect(() => {
-    // Handle Ethereum wallet conflicts
-    const handleEthereumConflicts = () => {
-      try {
-        // Check if ethereum is already defined and is not writable
-        if (typeof window !== 'undefined' && window.ethereum) {
-          const descriptor = Object.getOwnPropertyDescriptor(window, 'ethereum');
-          if (descriptor && !descriptor.writable && !descriptor.configurable) {
-            console.warn('Ethereum property is not configurable, conflicts may occur');
-          }
-        }
-      } catch (error) {
-        console.warn('Error checking ethereum property:', error);
-      }
-    };
+    handleEthereumConflicts();
+    
+    const projectId = params.id as string
+    const proj = ProjectStorage.getProject(projectId)
 
-    if (!hasInitialized.current) {
-      handleEthereumConflicts();
-      hasInitialized.current = true;
-      
-      const projectId = params.id as string
-      const proj = ProjectStorage.getProject(projectId)
+    if (proj) {
+      setProject(proj)
+      setClarCode(proj.clarFile || "")
+      setNewContractName(proj.contractName) // Initialize with current name
 
-      if (proj) {
-        setProject(proj)
-        setClarCode(proj.clarFile || "")
-        setNewContractName(proj.contractName) // Initialize with current name
-
-        const timestamp = new Date().toLocaleTimeString("en-US", {
-          hour12: false,
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })
-        setConsoleMessages([
-          { type: "info", message: `Project loaded: ${proj.contractName}`, timestamp },
-          { type: "info", message: `Network: ${proj.network}`, timestamp },
-          { type: "success", message: "Clarity AI is ready to help you build!", timestamp },
-        ])
-      } else {
-        router.push("/")
-      }
+      const timestamp = new Date().toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+      setConsoleMessages([
+        { type: "info", message: `Project loaded: ${proj.contractName}`, timestamp },
+        { type: "info", message: `Network: ${proj.network}`, timestamp },
+        { type: "success", message: "Clarity AI is ready to help you build!", timestamp },
+      ])
+    } else {
+      // If project not found, redirect to home
+      router.push("/")
     }
   }, [params.id, router])
 
@@ -429,7 +433,8 @@ export default function ProjectPage() {
     setShowRenameDialog(false)
   }
 
-  if (!project) {
+  // Show loading state while initializing
+  if (project === null) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center space-y-4">
