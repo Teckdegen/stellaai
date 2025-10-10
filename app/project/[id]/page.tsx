@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircle, AlertCircle, Send, Wifi, Info } from "lucide-react"
+import { Play, Home, Loader2, ExternalLink, Menu, Code, Network, Key, CheckCircle, AlertCircle, Send, Wifi, Info, Terminal } from "lucide-react"
 import { ChatPanel } from "@/components/chat-panel"
 import { CodeEditor } from "@/components/code-editor"
 import { ConsolePanel } from "@/components/console-panel"
@@ -25,6 +25,7 @@ export default function ProjectPage() {
     Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>
   >([])
   const [isDeploying, setIsDeploying] = useState(false)
+  const [isValidating, setIsValidating] = useState(false)
   const [deployedTxId, setDeployedTxId] = useState<string | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showPrivateKeyDialog, setShowPrivateKeyDialog] = useState(false)
@@ -54,7 +55,7 @@ export default function ProjectPage() {
     }
   }, [params.id, router])
 
-  const handleCodeUpdate = (newCode: string, reason?: string) => {
+  const handleCodeUpdate = async (newCode: string, reason?: string) => {
     setClarCode(newCode)
 
     if (project) {
@@ -74,46 +75,100 @@ export default function ProjectPage() {
       setConsoleMessages((prev) => [...prev, { type: "info", message: reason, timestamp }])
     }
 
-    const validation = validateClarityCode(newCode)
+    // Validate code with both built-in validator and Clarinet CLI
+    setIsValidating(true)
+    try {
+      // Built-in validation
+      const validation = validateClarityCode(newCode)
 
-    // Display errors
-    if (!validation.isValid) {
-      validation.errors.forEach((error) => {
+      // Display errors
+      if (!validation.isValid) {
+        validation.errors.forEach((error) => {
+          setConsoleMessages((prev) => [
+            ...prev,
+            {
+              type: "error",
+              message: `Line ${error.line}: ${error.message}`,
+              timestamp,
+            },
+          ])
+        })
+      }
+
+      // Display warnings
+      if (validation.warnings.length > 0) {
+        validation.warnings.forEach((warning) => {
+          setConsoleMessages((prev) => [
+            ...prev,
+            {
+              type: "warning",
+              message: `Warning Line ${warning.line}: ${warning.message}`,
+              timestamp,
+            },
+          ])
+        })
+      }
+
+      // Display success message only if valid and has content
+      if (validation.isValid && newCode.trim()) {
         setConsoleMessages((prev) => [
           ...prev,
           {
-            type: "error",
-            message: `Line ${error.line}: ${error.message}`,
+            type: "success",
+            message: "Code validation passed",
             timestamp,
           },
         ])
-      })
-    }
+      }
 
-    // Display warnings
-    if (validation.warnings.length > 0) {
-      validation.warnings.forEach((warning) => {
-        setConsoleMessages((prev) => [
-          ...prev,
-          {
-            type: "warning",
-            message: `Warning Line ${warning.line}: ${warning.message}`,
-            timestamp,
-          },
-        ])
-      })
-    }
+      // Clarinet CLI validation
+      if (project && newCode.trim()) {
+        try {
+          const response = await fetch("/api/validate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contractCode: newCode,
+              contractName: project.contractName,
+            }),
+          })
 
-    // Display success message only if valid and has content
-    if (validation.isValid && newCode.trim()) {
-      setConsoleMessages((prev) => [
-        ...prev,
-        {
-          type: "success",
-          message: "Code validation passed",
-          timestamp,
-        },
-      ])
+          const result = await response.json()
+
+          if (result.success) {
+            setConsoleMessages((prev) => [
+              ...prev,
+              {
+                type: "success",
+                message: "Clarinet validation passed",
+                timestamp,
+              },
+            ])
+          } else {
+            setConsoleMessages((prev) => [
+              ...prev,
+              {
+                type: "error",
+                message: `Clarinet validation failed: ${result.errors}`,
+                timestamp,
+              },
+            ])
+          }
+        } catch (error) {
+          setConsoleMessages((prev) => [
+            ...prev,
+            {
+              type: "warning",
+              message: "Could not validate with Clarinet CLI. Make sure it's installed.",
+              timestamp,
+            },
+          ])
+        }
+      }
+    } finally {
+      setIsValidating(false)
     }
   }
 
@@ -147,8 +202,9 @@ export default function ProjectPage() {
       second: "2-digit",
     })
 
-    const validation = validateClarityCode(clarCode)
-    if (!validation.isValid) {
+    // Validate with both validators before deployment
+    const builtinValidation = validateClarityCode(clarCode)
+    if (!builtinValidation.isValid) {
       setConsoleMessages((prev) => [
         ...prev,
         { type: "error", message: "Cannot deploy: Code has validation errors", timestamp },
@@ -157,10 +213,10 @@ export default function ProjectPage() {
     }
     
     // Display warnings before deployment
-    if (validation.warnings.length > 0) {
+    if (builtinValidation.warnings.length > 0) {
       setConsoleMessages((prev) => [
         ...prev,
-        { type: "info", message: `Code has ${validation.warnings.length} warning(s). Review before deploying.`, timestamp },
+        { type: "info", message: `Code has ${builtinValidation.warnings.length} warning(s). Review before deploying.`, timestamp },
       ])
     }
 
@@ -193,7 +249,6 @@ export default function ProjectPage() {
       ...prev,
       { type: "info", message: "Initiating deployment to Stacks blockchain...", timestamp },
       { type: "info", message: `Network: ${project.network}`, timestamp },
-      { type: "info", message: "Make sure your wallet has sufficient STX for transaction fees", timestamp },
     ])
 
     // Add safety checks for required project properties
@@ -239,28 +294,6 @@ export default function ProjectPage() {
         ])
         setIsDeploying(false)
       },
-      (detailedError: string) => {
-        const errorTimestamp = new Date().toLocaleTimeString("en-US", {
-          hour12: false,
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })
-        // Split the detailed error into multiple lines for better readability
-        const errorLines = detailedError.split('\n').filter(line => line.trim() !== '');
-        errorLines.forEach(line => {
-          setConsoleMessages((prev) => [
-            ...prev,
-            { 
-              type: line.startsWith('❌') ? "error" : 
-                   line.includes('Potential Causes:') || line.includes('Suggested Solutions:') ? "info" : 
-                   "warning",
-              message: line,
-              timestamp: errorTimestamp
-            },
-          ])
-        })
-      }
     )
   }
 

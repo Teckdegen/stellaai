@@ -22,6 +22,17 @@ Look for the lines:
 
 And replace them with your actual keys.
 
+## 🛠️ Clarinet CLI Setup
+
+This project integrates with Clarinet CLI for advanced contract validation. To use this feature:
+
+1. Install Clarinet CLI globally:
+   ```bash
+   npm install -g @hirosystems/clarinet
+   ```
+
+2. The IDE will automatically validate your contracts using Clarinet whenever you make changes
+
 ## How It Works
 
 Stella AI follows a simple but powerful workflow:
@@ -36,6 +47,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 
 - 🤖 **Dual AI Support**: Switch between Groq Llama and Google Gemini
 - ✅ **Built-in Validation**: Automatic syntax checking and error detection before deployment
+- 🧪 **Clarinet CLI Integration**: Advanced contract validation using Hiro's Clarinet CLI
 - 🛠️ **AI-Assisted Fixes**: Get suggestions for fixing common Clarity code issues
 - ⚡ **One-Click Deploy**: Deploy directly to Stacks blockchain with private key
 - 💾 **Local Storage**: Projects saved in your browser's local storage
@@ -48,6 +60,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 - Node.js 18+ installed
 - A Groq API key (get one at https://console.groq.com)
 - A Google Gemini API key (get one at https://aistudio.google.com)
+- Clarinet CLI installed globally (`npm install -g @hirosystems/clarinet`)
 - A Stacks private key for deployment
 
 ## Getting Started
@@ -70,12 +83,17 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
      - `GROQ_API_KEY=your-groq-api-key`
      - `GEMINI_API_KEY=your-gemini-api-key`
 
-4. **Run the development server:**
+4. **Install Clarinet CLI:**
+   ```bash
+   npm install -g @hirosystems/clarinet
+   ```
+
+5. **Run the development server:**
    ```bash
    npm run dev
    ```
 
-5. **Open your browser:**
+6. **Open your browser:**
    Navigate to `http://localhost:3000` to start using Stella AI.
 
 ## Usage
@@ -97,6 +115,7 @@ The AI generates a **single Clarity file** (.clar) that contains your entire con
 3. **Edit Code:**
    - The generated code appears in the editor
    - You can manually edit the code if needed
+   - The IDE automatically validates your code with both built-in and Clarinet validators
 
 4. **Deploy Contract:**
    - Click the "Deploy Contract" button
@@ -121,11 +140,13 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 ├── app/                    # Next.js app router pages
 │   ├── api/
 │   │   ├── chat/         # Groq Llama API endpoint
-│   │   └── gemini/       # Google Gemini API endpoint
+│   │   ├── gemini/       # Google Gemini API endpoint
+│   │   └── validate/     # Clarinet validation API endpoint
 │   └── project/[id]/     # Project page
 ├── components/            # React components
 ├── lib/                   # Utility functions
 │   ├── clarity-validator.ts # Clarity code validation
+│   ├── clarinet-validator.ts # Clarinet CLI integration
 │   ├── contract-deployer.ts # Contract deployment utility
 │   ├── project-storage.ts   # Project storage management
 │   ├── stacks-wallet.ts     # Stacks private key deployment
@@ -168,6 +189,7 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 - [Groq API](https://groq.com/) - AI inference (Llama 3.3 70b model)
 - [Google Gemini API](https://ai.google.dev/) - Alternative AI inference
 - [Stacks.js](https://stacks.js.org/) - Stacks blockchain integration
+- [Clarinet CLI](https://github.com/hirosystems/clarinet) - Clarity contract validation
 
 ## Troubleshooting
 
@@ -181,6 +203,7 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 - Semantic issues will be highlighted with suggestions
 - Invalid code will be blocked from deployment
 - Warnings help improve code quality and security
+- Clarinet validation provides advanced error detection
 
 ### Deployment Issues
 - Verify your private key is valid and has sufficient STX for transaction fees

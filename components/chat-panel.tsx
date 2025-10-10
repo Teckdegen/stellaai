@@ -213,6 +213,7 @@ export function ChatPanel({ projectId, onCodeUpdate, currentCode, contractName, 
         "(principal",
         "(contract-principal",
         "(standard-principal",
+        "(print",
       ]
 
       // Check if response contains Clarity code patterns
