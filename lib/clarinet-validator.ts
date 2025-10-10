@@ -2,9 +2,10 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { join, dirname } from 'path';
 import { writeFile, mkdir, rm, access, constants } from 'fs/promises';
-import { tmpdir } from 'os';
-import { platform } from 'process';
-import { existsSync } from 'fs';
+import { tmpdir, platform } from 'os';
+import { createReadStream, createWriteStream } from 'fs';
+import { pipeline } from 'stream/promises';
+import { createGunzip } from 'zlib';
 
 const execPromise = promisify(exec);
 
@@ -14,27 +15,34 @@ async function setupClarinetCLI(): Promise<string> {
   const tempDir = join(tmpdir(), 'clarinet-setup');
   
   if (isVercel) {
-    // On Vercel, download and extract Clarinet CLI
+    // On Vercel, download and extract Clarinet CLI using Node.js built-in modules
     try {
       // Create temp directory
       await mkdir(tempDir, { recursive: true });
       
       // Download Clarinet CLI for Linux (Vercel uses Linux)
-      const downloadCommand = `curl -L https://github.com/hirosystems/clarinet/releases/download/v3.8.0/clarinet-linux-x64.gz -o ${join(tempDir, 'clarinet.gz')}`;
+      const clarinetGzPath = join(tempDir, 'clarinet.gz');
+      const clarinetPath = join(tempDir, 'clarinet');
+      
+      // Use curl to download the gzipped file
+      const downloadCommand = `curl -L https://github.com/hirosystems/clarinet/releases/download/v3.8.0/clarinet-linux-x64.gz -o ${clarinetGzPath}`;
       await execPromise(downloadCommand, { timeout: 30000 });
       
-      // Extract the gz file
-      await execPromise(`gunzip ${join(tempDir, 'clarinet.gz')}`, { timeout: 30000 });
+      // Extract using Node.js built-in zlib
+      await pipeline(
+        createReadStream(clarinetGzPath),
+        createGunzip(),
+        createWriteStream(clarinetPath)
+      );
       
       // Make it executable
-      const clarinetPath = join(tempDir, 'clarinet');
       await execPromise(`chmod +x ${clarinetPath}`, { timeout: 5000 });
       
       return clarinetPath;
     } catch (error) {
       throw new Error(`Failed to setup Clarinet CLI on Vercel: ${error}`);
     }
-  } else if (platform === 'win32') {
+  } else if (platform() === 'win32') {
     // On Windows, use the installed path
     return '"C:\\Program Files\\clarinet\\bin\\clarinet.exe"';
   } else {
