@@ -27,6 +27,8 @@ export default function ProjectPage() {
   const params = useParams()
   const router = useRouter()
   const [project, setProject] = useState<Project | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [clarCode, setClarCode] = useState("")
   const [consoleMessages, setConsoleMessages] = useState<
     Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>
@@ -59,27 +61,45 @@ export default function ProjectPage() {
     handleEthereumConflicts();
     
     const projectId = params.id as string
-    const proj = ProjectStorage.getProject(projectId)
+    
+    // Reset state when project ID changes
+    setProject(null)
+    setLoadError(null)
+    setIsLoading(true)
+    setClarCode("")
+    
+    try {
+      // Check if localStorage is available
+      if (typeof window === 'undefined' || !window.localStorage) {
+        throw new Error("localStorage is not available");
+      }
+      
+      const proj = ProjectStorage.getProject(projectId)
 
-    if (proj) {
-      setProject(proj)
-      setClarCode(proj.clarFile || "")
-      setNewContractName(proj.contractName) // Initialize with current name
+      if (proj) {
+        setProject(proj)
+        setClarCode(proj.clarFile || "")
+        setNewContractName(proj.contractName)
 
-      const timestamp = new Date().toLocaleTimeString("en-US", {
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      })
-      setConsoleMessages([
-        { type: "info", message: `Project loaded: ${proj.contractName}`, timestamp },
-        { type: "info", message: `Network: ${proj.network}`, timestamp },
-        { type: "success", message: "Clarity AI is ready to help you build!", timestamp },
-      ])
-    } else {
-      // If project not found, redirect to home
-      router.push("/")
+        const timestamp = new Date().toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+        setConsoleMessages([
+          { type: "info", message: `Project loaded: ${proj.contractName}`, timestamp },
+          { type: "info", message: `Network: ${proj.network}`, timestamp },
+          { type: "success", message: "Clarity AI is ready to help you build!", timestamp },
+        ])
+      } else {
+        setLoadError("Project not found");
+      }
+    } catch (error: any) {
+      console.error("Error loading project:", error)
+      setLoadError(error.message || "Failed to load project");
+    } finally {
+      setIsLoading(false)
     }
   }, [params.id, router])
 
@@ -434,7 +454,7 @@ export default function ProjectPage() {
   }
 
   // Show loading state while initializing
-  if (project === null) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -445,15 +465,149 @@ export default function ProjectPage() {
     )
   }
 
+  // Show error state if project failed to load
+  if (loadError || (!project && !isLoading)) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md p-4">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+          <h2 className="text-2xl font-bold text-white">Error Loading Project</h2>
+          <p className="text-gray-400">
+            {loadError || "The requested project could not be found or loaded."}
+          </p>
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 mt-4">
+            <p className="text-sm text-red-300">
+              This usually happens when:
+            </p>
+            <ul className="text-xs text-red-300/80 mt-2 text-left list-disc pl-5 space-y-1">
+              <li>The project was deleted or doesn't exist</li>
+              <li>Browser storage is not accessible</li>
+              <li>There was a technical issue loading the project</li>
+            </ul>
+          </div>
+          <div className="flex flex-col gap-2 mt-6">
+            <Button 
+              onClick={() => router.push("/")} 
+              className="rounded-full bg-white text-black hover:bg-gray-200"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Back to Home
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()} 
+              className="rounded-full border-white/20 text-white hover:bg-white/10"
+            >
+              <Loader2 className="w-4 h-4 mr-2" />
+              Reload Page
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Render the main content only when project is loaded
+  return <ProjectContent 
+    project={project!} 
+    clarCode={clarCode}
+    consoleMessages={consoleMessages}
+    isDeploying={isDeploying}
+    isValidating={isValidating}
+    deployedTxId={deployedTxId}
+    mobileMenuOpen={mobileMenuOpen}
+    showPrivateKeyDialog={showPrivateKeyDialog}
+    privateKey={privateKey}
+    showRenameDialog={showRenameDialog}
+    newContractName={newContractName}
+    setProject={setProject}
+    setClarCode={setClarCode}
+    setConsoleMessages={setConsoleMessages}
+    setIsDeploying={setIsDeploying}
+    setIsValidating={setIsValidating}
+    setDeployedTxId={setDeployedTxId}
+    setMobileMenuOpen={setMobileMenuOpen}
+    setShowPrivateKeyDialog={setShowPrivateKeyDialog}
+    setPrivateKey={setPrivateKey}
+    setShowRenameDialog={setShowRenameDialog}
+    setNewContractName={setNewContractName}
+    handleCodeUpdate={handleCodeUpdate}
+    handleCodeChange={handleCodeChange}
+    handleValidate={handleValidate}
+    handleDeploy={handleDeploy}
+    handleDeployWithPrivateKey={handleDeployWithPrivateKey}
+    handleClearConsole={handleClearConsole}
+    handleRenameProject={handleRenameProject}
+    router={router}
+  />
+}
+
+// Separate component for the main content to avoid TypeScript issues
+function ProjectContent({
+  project,
+  clarCode,
+  consoleMessages,
+  isDeploying,
+  isValidating,
+  deployedTxId,
+  mobileMenuOpen,
+  showPrivateKeyDialog,
+  privateKey,
+  showRenameDialog,
+  newContractName,
+  setProject,
+  setClarCode,
+  setConsoleMessages,
+  setIsDeploying,
+  setIsValidating,
+  setDeployedTxId,
+  setMobileMenuOpen,
+  setShowPrivateKeyDialog,
+  setPrivateKey,
+  setShowRenameDialog,
+  setNewContractName,
+  handleCodeUpdate,
+  handleCodeChange,
+  handleValidate,
+  handleDeploy,
+  handleDeployWithPrivateKey,
+  handleClearConsole,
+  handleRenameProject,
+  router
+}: {
+  project: Project
+  clarCode: string
+  consoleMessages: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>
+  isDeploying: boolean
+  isValidating: boolean
+  deployedTxId: string | null
+  mobileMenuOpen: boolean
+  showPrivateKeyDialog: boolean
+  privateKey: string
+  showRenameDialog: boolean
+  newContractName: string
+  setProject: (project: Project) => void
+  setClarCode: (code: string) => void
+  setConsoleMessages: (messages: Array<{ type: "info" | "error" | "success" | "warning"; message: string; timestamp: string }>) => void
+  setIsDeploying: (deploying: boolean) => void
+  setIsValidating: (validating: boolean) => void
+  setDeployedTxId: (txId: string | null) => void
+  setMobileMenuOpen: (open: boolean) => void
+  setShowPrivateKeyDialog: (show: boolean) => void
+  setPrivateKey: (key: string) => void
+  setShowRenameDialog: (show: boolean) => void
+  setNewContractName: (name: string) => void
+  handleCodeUpdate: (newCode: string, reason?: string) => void
+  handleCodeChange: (newCode: string) => void
+  handleValidate: () => void
+  handleDeploy: () => void
+  handleDeployWithPrivateKey: () => void
+  handleClearConsole: () => void
+  handleRenameProject: () => void
+  router: any
+}) {
   const explorerUrl = deployedTxId ? `https://explorer.stacks.co/txid/${deployedTxId}?chain=${project.network}` : null
   const fileName = `${project.contractName}.clar`
-
-  // Update the useEffect to refresh when project changes
-  useEffect(() => {
-    if (project) {
-      setNewContractName(project.contractName)
-    }
-  }, [project])
 
   return (
     <div className="h-screen bg-black flex flex-col overflow-hidden">
@@ -472,7 +626,7 @@ export default function ProjectPage() {
                 projectId={project.id}
                 onCodeUpdate={handleCodeUpdate}
                 currentCode={clarCode}
-                contractName={project.contractName} // Use current project name
+                contractName={project.contractName}
                 network={project.network}
               />
             </SheetContent>
@@ -620,7 +774,7 @@ export default function ProjectPage() {
               </Button>
               <Button 
                 onClick={handleRenameProject} 
-                disabled={!newContractName.trim() || newContractName.trim() === project?.contractName}
+                disabled={!newContractName.trim() || newContractName.trim() === project.contractName}
                 className="rounded-full bg-white text-black hover:bg-gray-200"
               >
                 Rename
