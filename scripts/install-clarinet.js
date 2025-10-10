@@ -1,13 +1,9 @@
 const { execSync } = require('child_process');
-const { writeFileSync, existsSync, mkdirSync } = require('fs');
+const { existsSync, mkdirSync } = require('fs');
 const { join } = require('path');
 
-console.log('Installing Clarinet CLI...');
-
-// Check if we're on Vercel
+// Only run on Vercel
 if (process.env.VERCEL) {
-  console.log('Running on Vercel, installing Clarinet CLI...');
-  
   try {
     // Create a directory for Clarinet
     const clarinetDir = join(process.env.VERCEL_BUILD_DIR || '/tmp', 'clarinet-bin');
@@ -17,26 +13,19 @@ if (process.env.VERCEL) {
     
     // Download Clarinet CLI for Linux (Vercel uses Linux)
     const clarinetPath = join(clarinetDir, 'clarinet');
-    console.log('Downloading Clarinet CLI to:', clarinetPath);
     
-    // Use curl with more robust options
-    execSync(`curl -L --retry 3 --retry-delay 2 https://github.com/hirosystems/clarinet/releases/download/v3.8.0/clarinet-linux-x64 -o ${clarinetPath}`, { 
-      stdio: 'inherit' 
-    });
+    // Use curl with quiet mode to reduce output
+    execSync(`curl -s -L --retry 3 --retry-delay 2 https://github.com/hirosystems/clarinet/releases/download/v3.8.0/clarinet-linux-x64 -o ${clarinetPath}`);
     
     // Make it executable
-    console.log('Making Clarinet CLI executable...');
-    execSync(`chmod +x ${clarinetPath}`, { stdio: 'inherit' });
+    execSync(`chmod +x ${clarinetPath}`);
     
-    // Test the installation
-    console.log('Testing Clarinet CLI installation...');
-    execSync(`${clarinetPath} --version`, { stdio: 'inherit' });
+    // Test the installation quietly
+    execSync(`${clarinetPath} --version`, { stdio: 'ignore' });
     
-    console.log('Clarinet CLI installed successfully!');
+    // Success message
+    console.log('Clarinet CLI installed successfully');
   } catch (error) {
-    console.error('Failed to install Clarinet CLI:', error.message);
-    console.log('Continuing without Clarinet CLI...');
+    // Silent fail - continue without Clarinet CLI
   }
-} else {
-  console.log('Not running on Vercel, skipping Clarinet CLI installation');
 }
