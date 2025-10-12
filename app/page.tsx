@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Settings, Code, Network } from "lucide-react"
+import { Plus, Settings, Code, Network, FolderOpen } from "lucide-react"
 import { ProjectStorage, type Project } from "@/lib/project-storage"
 import { SettingsPanel } from "@/components/settings-panel"
+import { ProjectList } from "@/components/project-list"
 
 export default function Home() {
   const router = useRouter()
@@ -53,13 +54,20 @@ export default function Home() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-4xl mx-auto">
-          <TabsList className="grid w-full grid-cols-2 mb-8 bg-black border border-white/10">
+          <TabsList className="grid w-full grid-cols-3 mb-8 bg-black border border-white/10">
             <TabsTrigger 
               value="create" 
               className="flex items-center gap-2 py-3 data-[state=active]:bg-white data-[state=active]:text-black"
             >
               <Plus className="w-4 h-4" />
               New Project
+            </TabsTrigger>
+            <TabsTrigger 
+              value="projects" 
+              className="flex items-center gap-2 py-3 data-[state=active]:bg-white data-[state=active]:text-black"
+            >
+              <FolderOpen className="w-4 h-4" />
+              My Projects
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
@@ -134,6 +142,23 @@ export default function Home() {
                     )}
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="projects">
+            <Card className="bg-black border-white/10">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FolderOpen className="w-5 h-5" />
+                  My Projects
+                </CardTitle>
+                <CardDescription>
+                  Browse and manage your Clarity smart contract projects
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ProjectList />
               </CardContent>
             </Card>
           </TabsContent>
