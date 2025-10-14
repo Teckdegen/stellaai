@@ -1702,5 +1702,5 @@ none                              ;; No value
   )
     (if (>= elapsed cooldown-period)
       (ok u0)
-      (ok (- cooldown-period elapsed)))))
+      (ok (- cooldown-period elapsed))))
 \`\`\`

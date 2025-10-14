@@ -51,10 +51,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-    );
-  }
-}
-
 // Handle OpenAI requests
 async function handleOpenAIRequest(
   apiKey: string,

@@ -2362,6 +2362,7 @@ none                              ;; No value
 ;; ============================================
 
 ;; ❌ WRONG - tx-sent doesn't exist
+;; ❌ WRONG - tx-sent doesn't exist
 (define-public (bad-deposit)
   (stx-transfer? tx-sent tx-sender (as-contract tx-sender)))
 ;; Error: tx-sent is not defined!
