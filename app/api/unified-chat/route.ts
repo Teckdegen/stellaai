@@ -3361,16 +3361,13 @@ export async function POST(req: NextRequest) {
       }),
       {
         status: 400,
-  if (_next != undefined) throw Error(`
-Usage
+      }
+    );
+  }
 
-app/${context.fileName.split('.')[0].substring(8).split('.json').join('.')}
-
-
-Security 
-
-- Follow security best practices
-\`;
+  const nftData = await fetchNFTData(address, chain);
+  return new Response(JSON.stringify(nftData));
+}
 
 export async function POST(req: NextRequest) {
   const { address, chain } = await req.json();
