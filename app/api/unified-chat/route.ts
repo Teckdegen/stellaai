@@ -4,9 +4,12 @@ import { NextRequest } from "next/server"
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "your-groq-api-key-here"
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "your-gemini-api-key-here"
 
+/**
+ * - Follow security best practices
+ */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const body = await req.json();
     const { 
       messages, 
       contractName, 
@@ -15,26 +18,26 @@ export async function POST(req: NextRequest) {
       codebaseContext,
       customProvider,
       apiKey
-    } = body
+    } = body;
 
     // If custom provider is specified, use it
     if (customProvider && apiKey) {
       switch (customProvider) {
         case 'openai':
-          return await handleOpenAIRequest(apiKey, messages, contractName, network, currentCode, codebaseContext)
+          return await handleOpenAIRequest(apiKey, messages, contractName, network, currentCode, codebaseContext);
         case 'claude':
-          return await handleClaudeRequest(apiKey, messages, contractName, network, currentCode, codebaseContext)
+          return await handleClaudeRequest(apiKey, messages, contractName, network, currentCode, codebaseContext);
         case 'xai':
-          return await handleXAIRequest(apiKey, messages, contractName, network, currentCode, codebaseContext)
+          return await handleXAIRequest(apiKey, messages, contractName, network, currentCode, codebaseContext);
         default:
-          throw new Error(`Unsupported custom provider: ${customProvider}`)
+          throw new Error(`Unsupported custom provider: ${customProvider}`);
       }
     }
 
     // Default to Groq if no custom provider
-    return await handleGroqRequest(messages, contractName, network, currentCode, codebaseContext)
+    return await handleGroqRequest(messages, contractName, network, currentCode, codebaseContext);
   } catch (error: any) {
-    console.error("[Unified Chat API] Error:", error)
+    console.error("[Unified Chat API] Error:", error);
     return new Response(
       JSON.stringify({ 
         error: "Failed to generate response",
@@ -44,7 +47,11 @@ export async function POST(req: NextRequest) {
         status: 500,
         headers: { "Content-Type": "application/json" },
       }
-    )
+    );
+  }
+}
+
+    );
   }
 }
 
@@ -3332,5 +3339,46 @@ Key Clarity Development Principles:
 - Include comprehensive comments for complex logic
 - Implement proper access controls
 - Consider gas costs and optimization
-- Follow security best practices`
+- Follow security best practices
+\`;
+}
+
+export async function POST(req: NextRequest) {
+  const { address, chainId } = await req.json();
+
+  if (!address || !chainId) {
+    return new Response(
+      JSON.stringify({
+        error: "Invalid input",
+      }),
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const chain = getChain(chainId);
+  if (!chain) {
+    return new Response(
+      JSON.stringify({
+        error: "Invalid chainId",
+      }),
+      {
+        status: 400,
+  if (_next != undefined) throw Error(`
+Usage
+
+app/${context.fileName.split('.')[0].substring(8).split('.json').join('.')}
+
+
+Security 
+
+- Follow security best practices
+\`;
+
+export async function POST(req: NextRequest) {
+  const { address, chain } = await req.json();
+
+  const nftData = await fetchNFTData(address, chain);
+  return new Response(JSON.stringify(nftData));
 }

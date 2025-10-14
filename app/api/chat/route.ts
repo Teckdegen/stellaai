@@ -1516,6 +1516,165 @@ none                              ;; No value
     (ok true)))
 \`\`\`
 
+## 7. STX & Token Operations
+
+### 7.1 STX Transfers
+
+\`\`\`clarity
+;; Transfer STX from sender to recipient
+(define-public (transfer (recipient principal) (amount uint))
+  (begin
+    (asserts! (> amount u0) err-zero-amount)
+    (try! (stx-transfer? amount tx-sender recipient))
+    (ok true)))
+
+;; Transfer STX from contract to recipient
+(define-public (withdraw (amount uint))
+  (begin
+    (asserts! (> amount u0) err-zero-amount)
+    (try! (as-contract (stx-transfer? amount tx-sender recipient)))
+    (ok true)))
+
+;; Transfer STX from sender to contract
+(define-public (deposit (amount uint))
+  (begin
+    (asserts! (> amount u0) err-zero-amount)
+    (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
+    (ok true)))
+
+;; Transfer STX from contract to sender
+(define-public (refund)
+  (let ((balance (stx-get-balance (as-contract tx-sender))))
+    (try! (as-contract (stx-transfer? balance tx-sender tx-sender)))
+    (ok true)))
+
+;; Transfer STX with memo
+(define-public (transfer-with-memo (recipient principal) (amount uint) (memo (string-ascii 34)))
+  (begin
+    (asserts! (> amount u0) err-zero-amount)
+    (try! (stx-transfer? amount tx-sender recipient))
+    (ok true)))
+
+;; Transfer STX with error handling
+(define-public (safe-transfer (recipient principal) (amount uint))
+  (begin
+    (asserts! (> amount u0) err-zero-amount)
+    (try! (stx-transfer? amount tx-sender recipient))
+    (ok true)))
+
+;; Transfer STX with multiple recipients
+(define-public (batch-transfer (recipients (list 10 principal)) (amounts (list 10 uint)))
+  (begin
+    (asserts! (is-eq (len recipients) (len amounts)) err-length-mismatch)
+    (ok (map transfer-to recipients amounts))))
+\`\`\`
+
+### 7.2 Token Transfers
+
+\`\`\`clarity
+;; Transfer SIP-010 token from sender to recipient
+(define-public (transfer-token (recipient principal) (amount uint))
+  (begin
+    (asserts! (> amount u0) err-zero-amount)
+    (try! (ft-transfer? my-token amount tx-sender recipient))
+    (ok true)))
+
+;; Transfer SIP-010 token from contract to recipient
+(define-public (withdraw-token (amount uint))
+  (begin
+    (asserts! (> amount u0) err-zero-amount)
+    (try! (as-contract (ft-transfer? my-token amount tx-sender recipient)))
+    (ok true)))
+
+;; Transfer SIP-010 token from sender to contract
+(define-public (deposit-token (amount uint))
+  (begin
+    (asserts! (> amount u0) err-zero-amount)
+    (try! (ft-transfer? my-token amount tx-sender (as-contract tx-sender)))
+    (ok true)))
+
+;; Transfer SIP-010 token from contract to sender
+(define-public (refund-token)
+  (let ((balance (ft-get-balance my-token (as-contract tx-sender))))
+    (try! (as-contract (ft-transfer? my-token balance tx-sender tx-sender)))
+    (ok true)))
+
+;; Transfer SIP-010 token with memo
+(define-public (transfer-token-with-memo (recipient principal) (amount uint) (memo (string-ascii 34)))
+  (begin
+    (asserts! (> amount u0) err-zero-amount)
+    (try! (ft-transfer? my-token amount tx-sender recipient))
+    (ok true)))
+
+;; Transfer SIP-010 token with error handling
+(define-public (safe-transfer-token (recipient principal) (amount uint))
+  (begin
+    (asserts! (> amount u0) err-zero-amount)
+    (try! (ft-transfer? my-token amount tx-sender recipient))
+    (ok true)))
+
+;; Transfer SIP-010 token with multiple recipients
+(define-public (batch-transfer-token (recipients (list 10 principal)) (amounts (list 10 uint)))
+  (begin
+    (asserts! (is-eq (len recipients) (len amounts)) err-length-mismatch)
+    (ok (map transfer-to-token recipients amounts))))
+\`\`\`
+
+## 8. Access Control & Security
+
+### 8.1 Role-Based Access Control (RBAC)
+
+\`\`\`clarity
+;; ============================================
+;; ROLE-BASED ACCESS CONTROL (RBAC)
+;; ============================================
+
+(define-constant role-admin "admin")
+(define-constant role-minter "minter")
+(define-constant role-pauser "pauser")
+(define-constant role-burner "burner")
+
+(define-map roles {user: principal, role: (string-ascii 20)} bool)
+
+;; Grant role
+(define-public (grant-role (user principal) (role (string-ascii 20)))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-unauthorized)
+    (map-set roles {user: user, role: role} true)
+    (print {event: "role-granted", user: user, role: role})
+    (ok true)))
+
+;; Revoke role
+(define-public (revoke-role (user principal) (role (string-ascii 20)))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-unauthorized)
+    (map-delete roles {user: user, role: role})
+    (print {event: "role-revoked", user: user, role: role})
+    (ok true)))
+
+;; Check role
+(define-read-only (has-role (user principal) (role (string-ascii 20)))
+  (ok (default-to false (map-get? roles {user: user, role: role}))))
+
+;; Require role
+(define-private (require-role (role (string-ascii 20)))
+  (asserts! (default-to false (map-get? roles {user: tx-sender, role: role})) 
+    err-unauthorized))
+
+;; Protected functions
+(define-public (mint-tokens (amount uint) (recipient principal))
+  (begin
+    (try! (require-role role-minter))
+    ;; Minting logic
+    (ok true)))
+
+(define-public (pause-contract)
+  (begin
+    (try! (require-role role-pauser))
+    ;; Pause logic
+    (ok true)))
+\`\`\`
+
 ### 8.2 Whitelist/Blacklist Patterns
 
 \`\`\`clarity
@@ -2207,4 +2366,7 @@ none                              ;; No value
   (stx-transfer? tx-sent tx-sender (as-contract tx-sender)))
 ;; Error: tx-sent is not defined!
 
-;; ✅ CORRECT - Amount is
+;; ✅ CORRECT - Amount is a parameter
+(define-public (good-deposit (amount uint))
+  (stx-transfer? amount tx-sender (as-contract tx-sender)))\`;
+}

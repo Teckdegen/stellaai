@@ -3108,7 +3108,8 @@ Key Clarity Development Principles:
           {
             method: "POST",
             headers: {
-              "Authorization": \`Bearer \${apiKey}\`,
+              "Authorization": `Bearer ${apiKey}`
+,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -3128,7 +3129,7 @@ Key Clarity Development Principles:
 
         if (!openaiResponse.ok) {
           const errorText = await openaiResponse.text()
-          throw new Error(\`OpenAI API error: \${openaiResponse.status} \${openaiResponse.statusText} - \${errorText}\`)
+          throw new Error(`OpenAI API error: ${openaiResponse.status} ${openaiResponse.statusText} - ${errorText}`)
         }
 
         const openaiData = await openaiResponse.json()
@@ -3161,7 +3162,7 @@ Key Clarity Development Principles:
 
         if (!claudeResponse.ok) {
           const errorText = await claudeResponse.text()
-          throw new Error(\`Claude API error: \${claudeResponse.status} \${claudeResponse.statusText} - \${errorText}\`)
+          throw new Error(`Claude API error: ${claudeResponse.status} ${claudeResponse.statusText} - ${errorText}`)
         }
 
         const claudeData = await claudeResponse.json()
@@ -3175,7 +3176,8 @@ Key Clarity Development Principles:
           {
             method: "POST",
             headers: {
-              "Authorization": \`Bearer \${apiKey}\`,
+              "Authorization": `Bearer ${apiKey}`
+,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -3195,7 +3197,7 @@ Key Clarity Development Principles:
 
         if (!xaiResponse.ok) {
           const errorText = await xaiResponse.text()
-          throw new Error(\`X AI API error: \${xaiResponse.status} \${xaiResponse.statusText} - \${errorText}\`)
+          throw new Error(`X AI API error: ${xaiResponse.status} ${xaiResponse.statusText} - ${errorText}`)
         }
 
         const xaiData = await xaiResponse.json()
@@ -3211,9 +3213,9 @@ Key Clarity Development Principles:
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
       },
-    })
+    });
   } catch (error: any) {
-    console.error("[Custom AI] API Error:", error)
+    console.error("[Custom AI] API Error:", error);
     return new Response(
       JSON.stringify({ 
         error: "Failed to generate response",
@@ -3223,6 +3225,6 @@ Key Clarity Development Principles:
         status: 500,
         headers: { "Content-Type": "application/json" },
       }
-    )
+    );
   }
 }
